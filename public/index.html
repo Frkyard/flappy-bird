@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird — Premium Edition</title>
+  <meta name="description" content="A beautifully crafted Flappy Bird game with stunning visuals and effects.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="landing-container">
+    <div class="landing-card">
+      
+      <div class="bird-float">🐦</div>
+
+      <h1>FLAPPY BIRD</h1>
+      <p class="tagline">Premium Edition</p>
+
+      <div class="menu-buttons">
+        <a href="single-player/rules-single-player.html" class="btn btn-primary">
+          <span class="btn-icon">🎮</span>
+          <span>Single Player</span>
+        </a>
+
+        <a href="multi-player/multiplayer.html" class="btn btn-secondary">
+          <span class="btn-icon">👥</span>
+          <span>Multiplayer</span>
+        </a>
+      </div>
+
+      <div class="landing-stats">
+        <div class="landing-stat">
+          <span class="ls-value" id="bestScore">0</span>
+          <span class="ls-label">Best Score</span>
+        </div>
+
+        <div class="landing-stat">
+          <span class="ls-value" id="gamesPlayed">0</span>
+          <span class="ls-label">Games Played</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("bestScore").textContent =
+      localStorage.getItem("flappyHighScore") || 0;
+
+    document.getElementById("gamesPlayed").textContent =
+      localStorage.getItem("flappyTotalGames") || 0;
+  </script>
+</body>
+</html>
