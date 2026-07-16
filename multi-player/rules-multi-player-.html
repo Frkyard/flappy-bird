@@ -1,150 +1,513 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Multiplayer Rules — Flappy Bird Premium</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+<title>Flappy Bird Premium - Multiplayer Guide</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-        }
+<style>
 
-        h1 {
-            text-align: center;
-            font-size: 34px;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #00E5FF, #7C4DFF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        h2 {
-            margin-top: 25px;
-            font-size: 20px;
-            color: #00E5FF;
-        }
+body{
 
-        p, li {
-            font-size: 14px;
-            line-height: 1.6;
-            color: rgba(255,255,255,0.85);
-        }
+    font-family:'Outfit',sans-serif;
 
-        ul {
-            padding-left: 20px;
-        }
+    background:
+    linear-gradient(135deg,#0f0c29,#302b63,#24243e);
 
-        .mode-box {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
+    color:#fff;
 
-        .mode {
-            margin-bottom: 8px;
-        }
+    min-height:100vh;
 
-        .btn {
-            margin-top: 25px;
-            display: block;
-            text-align: center;
-            padding: 12px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00E5FF, #7C4DFF);
-            color: white;
-            transition: 0.2s;
-        }
+    display:flex;
 
-        .btn:hover {
-            transform: translateY(-2px);
-        }
+    justify-content:center;
 
-        .winner {
-            color: #FFD700;
-            font-weight: 700;
-        }
-    </style>
+    align-items:center;
+
+    overflow-x:hidden;
+
+}
+
+/* Animated Stars */
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+inset:0;
+
+background:
+radial-gradient(circle,#ffffff55 1px,transparent 1px);
+
+background-size:45px 45px;
+
+opacity:.25;
+
+animation:stars 30s linear infinite;
+
+pointer-events:none;
+
+}
+
+@keyframes stars{
+
+from{
+transform:translateY(0);
+}
+
+to{
+transform:translateY(45px);
+}
+
+}
+
+.container{
+
+width:90%;
+
+max-width:900px;
+
+margin:40px auto;
+
+padding:35px;
+
+border-radius:25px;
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(14px);
+
+border:1px solid rgba(255,255,255,.12);
+
+box-shadow:0 20px 60px rgba(0,0,0,.45);
+
+}
+
+h1{
+
+text-align:center;
+
+font-size:38px;
+
+font-weight:900;
+
+background:linear-gradient(90deg,#00E5FF,#7C4DFF);
+
+-webkit-background-clip:text;
+
+-webkit-text-fill-color:transparent;
+
+margin-bottom:10px;
+
+}
+
+.subtitle{
+
+text-align:center;
+
+opacity:.7;
+
+margin-bottom:35px;
+
+font-size:15px;
+
+}
+
+.card{
+
+background:rgba(255,255,255,.05);
+
+border:1px solid rgba(255,255,255,.08);
+
+padding:22px;
+
+border-radius:18px;
+
+margin-bottom:22px;
+
+transition:.3s;
+
+}
+
+.card:hover{
+
+transform:translateY(-4px);
+
+border-color:#00E5FF;
+
+box-shadow:0 0 25px rgba(0,229,255,.2);
+
+}
+
+h2{
+
+font-size:22px;
+
+color:#00E5FF;
+
+margin-bottom:15px;
+
+}
+
+ul{
+
+padding-left:22px;
+
+}
+
+li{
+
+margin:8px 0;
+
+line-height:1.7;
+
+font-size:15px;
+
+color:rgba(255,255,255,.88);
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-top:10px;
+
+}
+
+th{
+
+background:#00E5FF;
+
+color:#000;
+
+padding:12px;
+
+}
+
+td{
+
+padding:12px;
+
+text-align:center;
+
+border:1px solid rgba(255,255,255,.12);
+
+}
+
+.key{
+
+display:inline-block;
+
+padding:4px 10px;
+
+background:#7C4DFF;
+
+border-radius:8px;
+
+font-weight:700;
+
+}
+
+.note{
+
+margin-top:15px;
+
+padding:15px;
+
+border-left:4px solid #FFD700;
+
+background:rgba(255,215,0,.08);
+
+border-radius:8px;
+
+}
+
+.btn{
+
+display:block;
+
+margin-top:30px;
+
+text-align:center;
+
+padding:15px;
+
+text-decoration:none;
+
+font-weight:700;
+
+font-size:17px;
+
+color:white;
+
+border-radius:14px;
+
+background:linear-gradient(135deg,#00E5FF,#7C4DFF);
+
+transition:.3s;
+
+}
+
+.btn:hover{
+
+transform:translateY(-3px);
+
+box-shadow:0 10px 30px rgba(0,229,255,.35);
+
+}
+
+footer{
+
+margin-top:30px;
+
+text-align:center;
+
+font-size:13px;
+
+opacity:.55;
+
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-    <h1>FLAPPY BIRD MULTI PLAYER</h1>
-    <p style="text-align:center; opacity:0.7;">
-        Multiplayer Rules & Battle Guide
-    </p>
+<h1>🐦 FLAPPY BIRD PREMIUM</h1>
 
-    <h2>👥 Mode Multiplayer</h2>
-    <ul>
-        <li>2 pemain bermain secara bersamaan.</li>
-        <li>Setiap pemain memiliki burung dan skor masing-masing.</li>
-        <li>Pemain yang bertahan paling lama akan menjadi pemenang.</li>
-    </ul>
+<p class="subtitle">
+Official Multiplayer Guide & Rules
+</p>
 
-    <h2>🎮 Kontrol</h2>
-    <div class="mode-box">
-        <div class="mode"><b>Player 1</b> → Tekan <b>W</b> untuk terbang</div>
-        <div class="mode"><b>Player 2</b> → Tekan <b>↑ (Arrow Up)</b> untuk terbang</div>
-    </div>
+<div class="card">
 
-    <h2>🏁 Aturan Permainan</h2>
-    <ul>
-        <li>Setiap pipa yang berhasil dilewati = +1 skor.</li>
-        <li>Jika salah satu pemain menabrak pipa atau tanah, pemain tersebut <b>gugur</b>.</li>
-        <li>Pemain yang masih hidup akan terus bermain sampai kalah atau mencapai skor tertinggi.</li>
-        <li>Jika kedua pemain kalah pada waktu yang hampir bersamaan, pemenang ditentukan dari <b>skor tertinggi</b>.</li>
-    </ul>
+<h2>👥 Multiplayer Mode</h2>
 
-    <h2>⚔️ Sistem Battle</h2>
-    <div class="mode-box">
-        <div class="mode">🟢 <b>Awal Game</b> → Kecepatan normal</div>
-        <div class="mode">🟡 <b>Skor 5+</b> → Pipa bergerak lebih cepat</div>
-        <div class="mode">🟠 <b>Skor 10+</b> → Jarak antar pipa lebih sempit</div>
-        <div class="mode">🔴 <b>Skor 15+</b> → Tantangan semakin sulit</div>
-        <div class="mode winner">⚡ <b>Skor 20+</b> → Mode Hardcore Multiplayer</div>
-    </div>
+<ul>
 
-    <h2>🏆 Kondisi Menang</h2>
-    <ul>
-        <li>Menjadi pemain terakhir yang masih hidup.</li>
-        <li>Atau memiliki skor tertinggi saat kedua pemain gugur.</li>
-    </ul>
+<li>Permainan dimainkan oleh 2 pemain secara bersamaan.</li>
+    <li>Setiap pemain memiliki area permainan (canvas) masing-masing.</li>
+    <li>Setiap pemain memiliki skor, koin, dan skin sendiri.</li>
+    <li>Pertandingan berakhir setelah kedua pemain gugur.</li>
 
-    <h2>💡 Tips Multiplayer</h2>
-    <ul>
-        <li>Jangan terlalu fokus pada lawan.</li>
-        <li>Jaga ritme lompatan tetap stabil.</li>
-        <li>Level tinggi membutuhkan kontrol yang lebih halus.</li>
-        <li>Tekanan dari lawan sering membuat pemain terburu-buru — tetap tenang.</li>
-    </ul>
+</ul>
 
-    <a class="btn" href="multiplayer.html">▶ Kembali ke Multiplayer</a>
+</div>
+
+<div class="card">
+
+<h2>🎮 Controls</h2>
+
+<table>
+
+<tr>
+
+<th>Player</th>
+
+<th>Action</th>
+
+</tr>
+
+<tr>
+
+<td>Player 1</td>
+
+<td><span class="key">SPACE</span></td>
+
+</tr>
+
+<tr>
+
+<td>Player 2</td>
+
+<td><span class="key">↑ Arrow Up</span></td>
+
+</tr>
+
+<tr>
+
+<td>Pause</td>
+
+<td><span class="key">P</span> / <span class="key">ESC</span></td>
+
+</tr>
+
+<tr>
+
+<td>Restart</td>
+
+<td><span class="key">R</span></td>
+
+</tr>
+
+<tr>
+
+<td>Mute</td>
+
+<td><span class="key">M</span></td>
+
+</tr>
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h2>🕹 Gameplay Rules</h2>
+
+<ul>
+
+<li>Tekan tombol kontrol untuk memulai permainan.</li>
+<li>Setiap pipa yang berhasil dilewati akan mendapatkan +1 skor.</li>
+<li>Burung akan terus turun karena gravitasi.</li>
+<li>Hindari menabrak pipa dan menyentuh tanah.</li>
+<li>Bertahan selama mungkin untuk memperoleh skor tertinggi.</li>
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>⚔  Sistem Tingkat Kesulitan</h2>
+
+<ul>
+
+<li>Kecepatan pipa akan meningkat secara bertahap.</li>
+
+<li>Jarak antar pipa akan semakin sempit.</li>
+
+<li>Pipa akan muncul lebih cepat.</li>
+
+<li>Tingkat kesulitan meningkat secara otomatis berdasarkan skor pertandingan.</li>  
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>💰 Coin Rewards</h2>
+
+<ul>
+
+<li>Koin diperoleh setelah pertandingan selesai.</li>
+
+<li>Jumlah koin dihitung berdasarkan skor yang diperoleh.</li>
+</ul>
+
+<div class="note">
+
+<b>Koin = (Skor ÷ 2 dibulatkan ke bawah) + 1</b>
+
+
+</div>
+
+<table>
+
+<tr>
+
+<th>Score</th>
+
+<th>Coins</th>
+
+</tr>
+
+<tr><td>0</td><td>1</td></tr>
+<tr><td>2</td><td>2</td></tr>
+<tr><td>4</td><td>3</td></tr>
+<tr><td>8</td><td>5</td></tr>
+<tr><td>10</td><td>6</td></tr>
+<tr><td>20</td><td>11</td></tr>
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h2>🛒 Skin Shop</h2>
+
+<ul>
+
+<li>Setiap pemain memiliki toko skin masing-masing.</li>
+
+<li>Koin Player 1 dan Player 2 tidak dapat digunakan secara bersamaan.</li>
+
+<li>Skin yang telah dibeli akan tersimpan secara otomatis.</li>
+
+<li>Skin yang dimiliki dapat dipasang kapan saja.</li>
+
+<li>Skin hanya mengubah tampilan burung dan tidak memengaruhi kemampuan bermain.</li>
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>🏆 Winning Conditions</h2>
+
+<ul>
+
+<li>Pemain dengan skor tertinggi menjadi pemenang.</li>
+
+<li>Jika kedua pemain memiliki skor yang sama maka pertandingan berakhir seri.</li>
+
+<li>Kedua pemain tetap memperoleh koin sesuai skor yang didapat.</li>
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>💡 Tips</h2>
+
+<ul>
+
+<li>Focus on your own screen.</li>
+
+<li>Maintain a steady jumping rhythm.</li>
+
+<li>Don't spam the jump button.</li>
+
+<li>Save coins to unlock premium skins.</li>
+
+<li>Higher scores mean higher difficulty.</li>
+
+</ul>
+
+</div>
+
+<a href="multiplayer.html" class="btn">
+🎮 Back to Multiplayer Game
+</a>
+
+<footer>
+
+Flappy Bird Premium Edition<br>
+Multiplayer Duel Version 2.0
+
+</footer>
 
 </div>
 
