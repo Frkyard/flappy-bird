@@ -2,91 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Game Rules — Flappy Bird Premium</title>
+    <title>Game Rules — Flappy Bird Single Player</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     <style>
+        *{
+            box-sizing:border-box;
+        }
+
         body {
             margin: 0;
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+            padding:30px 0;
         }
 
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        .container{
+            width:90%;
+            max-width:850px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.1);
+            border-radius:20px;
+            padding:35px;
+            backdrop-filter:blur(12px);
+            box-shadow:0 20px 60px rgba(0,0,0,.4);
         }
 
-        h1 {
-            text-align: center;
-            font-size: 34px;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #FFD700, #FF6B35);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        h1{
+            text-align:center;
+            font-size:34px;
+            margin-bottom:8px;
+            background:linear-gradient(135deg,#FFD700,#FF6B35);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
         }
 
-        h2 {
-            margin-top: 25px;
-            font-size: 20px;
-            color: #FFD700;
+        .subtitle{
+            text-align:center;
+            opacity:.7;
+            margin-bottom:30px;
         }
 
-        p, li {
-            font-size: 14px;
-            line-height: 1.6;
-            color: rgba(255,255,255,0.85);
+        h2{
+            margin-top:28px;
+            color:#FFD700;
+            font-size:21px;
         }
 
-        ul {
-            padding-left: 20px;
+        p,li{
+            color:rgba(255,255,255,.87);
+            line-height:1.7;
+            font-size:15px;
         }
 
-        .level-box {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
+        ul{
+            padding-left:22px;
         }
 
-        .level {
-            margin-bottom: 8px;
+        .level-box{
+            margin-top:18px;
+            padding:18px;
+            border-radius:15px;
+            background:rgba(255,255,255,.05);
+            border:1px solid rgba(255,255,255,.08);
         }
 
-        .btn {
-            margin-top: 25px;
-            display: block;
-            text-align: center;
-            padding: 12px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #1a1a2e;
-            transition: 0.2s;
+        .level{
+            margin-bottom:16px;
+            line-height:1.6;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
+        .danger{
+            color:#ff6767;
+            font-weight:bold;
         }
 
-        .danger {
-            color: #FF5252;
-            font-weight: 700;
+        .btn{
+            margin-top:35px;
+            display:block;
+            text-align:center;
+            text-decoration:none;
+            padding:14px;
+            border-radius:14px;
+            background:linear-gradient(135deg,#FFD700,#FFA500);
+            color:#1a1a2e;
+            font-weight:700;
+            transition:.25s;
+        }
+
+        .btn:hover{
+            transform:translateY(-3px);
         }
     </style>
 </head>
@@ -95,49 +107,136 @@
 
 <div class="container">
 
-    <h1>FLAPPY BIRD SINGLE PLAYER</h1>
-    <p style="text-align:center; opacity:0.7;">
-        Game Rules & Level System Guide
-    </p>
+<h1>FLAPPY BIRD SINGLE PLAYER RULES</h1>
 
-    <h2>🎮 Cara Bermain</h2>
-    <ul>
-        <li>Tekan <b>SPACE</b> atau klik untuk membuat burung terbang.</li>
-        <li>Hindari pipa hijau yang muncul dari atas dan bawah.</li>
-        <li>Setiap berhasil melewati pipa = +1 skor.</li>
-        <li>Game berakhir jika burung menabrak pipa atau tanah.</li>
-    </ul>
+<p class="subtitle">
+Single Player Game Rules & Gameplay Guide
+</p>
 
-    <h2>⚙️ Sistem Level</h2>
-    <p>Level meningkat otomatis berdasarkan skor kamu:</p>
+<h2>🎮 Cara Bermain</h2>
 
-    <div class="level-box">
+<ul>
+    <li>Tekan <b>SPACE</b>, <b>Arrow Up</b>, klik mouse, atau sentuh layar untuk mulai bermain dan membuat burung terbang.</li>
 
-        <div class="level">🟢 Level 1 → Skor 0 - 4 (Gravity ringan, game santai)</div>
-        <div class="level">🟡 Level 2 → Skor 5 - 9 (Mulai lebih cepat)</div>
-        <div class="level">🟠 Level 3 → Skor 10 - 14 (Tantangan meningkat)</div>
-        <div class="level">🔴 Level 4 → Skor 15 - 19 (Cepat & sempit)</div>
-        <div class="level danger">⚡ Level 5 → Skor 20+ (Mode hardcore)</div>
+    <li>Lewati setiap pipa tanpa menyentuh pipa ataupun tanah.</li>
 
-    </div>
+    <li>Setiap berhasil melewati satu pipa akan mendapatkan <b>+1 Score</b>.</li>
 
-    <h2>📉 Perubahan Gameplay per Level</h2>
-    <ul>
-        <li>Gravity meningkat → burung jatuh lebih cepat</li>
-        <li>Jump power meningkat → kontrol tetap seimbang</li>
-        <li>Kecepatan pipa meningkat</li>
-        <li>Jarak antar pipa makin sempit</li>
-    </ul>
+    <li>Kumpulkan <b>Food Boost</b> (ikon makanan berwarna emas) untuk mengaktifkan <b>Double Score</b> pada pipa berikutnya.</li>
 
-    <h2>🏆 Tips Pro</h2>
-    <ul>
-        <li>Jangan spam jump — timing lebih penting.</li>
-        <li>Fokus di ritme pipa, bukan burung.</li>
-        <li>Combo tinggi = bonus score visual.</li>
-        <li>Level tinggi butuh “tap ringan tapi konsisten”.</li>
-    </ul>
+    <li>Permainan berakhir apabila burung menabrak pipa atau tanah.</li>
+</ul>
 
-    <a class="btn" href="singleplayer.html">▶ Kembali ke Game</a>
+<h2>⚙️ Sistem Level</h2>
+
+<p>
+Level akan meningkat secara otomatis berdasarkan jumlah skor yang diperoleh pemain.
+</p>
+
+<div class="level-box">
+
+<div class="level">
+🟢 <b>Level 1</b> (Score 0–14)<br>
+Game dimulai dengan kecepatan normal sehingga pemain dapat beradaptasi dengan kontrol.
+</div>
+
+<div class="level">
+🟡 <b>Level 2</b> (Score 15–29)<br>
+Kecepatan pipa meningkat dan jarak antar pipa mulai mengecil.
+</div>
+
+<div class="level">
+🟠 <b>Level 3</b> (Score 30–44)<br>
+Gravity bertambah sehingga burung lebih cepat turun dan membutuhkan timing yang lebih akurat.
+</div>
+
+<div class="level">
+🔴 <b>Level 4</b> (Score 45–59)<br>
+Kecepatan permainan meningkat drastis dan tantangan menjadi lebih sulit.
+</div>
+
+<div class="level danger">
+⚡ <b>Level 5</b> (Score 60+)<br>
+Mode Hardcore dengan kecepatan maksimum dan celah pipa paling sempit.
+</div>
+
+</div>
+
+<h2>📈 Perubahan Gameplay</h2>
+
+<ul>
+
+<li>Gravity meningkat setiap naik level.</li>
+
+<li>Jump Power ikut meningkat agar kontrol tetap seimbang.</li>
+
+<li>Kecepatan pipa bertambah pada setiap level.</li>
+
+<li>Jarak antar pipa semakin sempit.</li>
+
+<li>Background berubah mengikuti level permainan.</li>
+
+<li>Animasi <b>LEVEL UP!</b> muncul saat naik level.</li>
+
+</ul>
+
+<h2>⭐ Bonus & Reward</h2>
+
+<ul>
+
+<li>Mengambil <b>Food Boost</b> akan memberikan <b>Double Score</b> untuk satu pipa berikutnya.</li>
+
+<li>Combo akan terus bertambah selama pemain berhasil melewati pipa tanpa gagal.</li>
+
+<li>Pemain akan memperoleh medali berdasarkan skor akhir:</li>
+
+<ul>
+
+<li>🥉 Bronze Medal : Score 10+</li>
+
+<li>🥈 Silver Medal : Score 25+</li>
+
+<li>🥇 Gold Medal : Score 45+</li>
+
+<li>💎 Platinum Medal : Score 60+</li>
+
+</ul>
+
+</ul>
+
+<h2>⌨️ Kontrol</h2>
+
+<ul>
+
+<li><b>SPACE</b>, <b>Arrow Up</b>, Klik Mouse, atau Sentuh Layar → Terbang</li>
+
+<li><b>P</b> atau <b>ESC</b> → Pause / Resume Game</li>
+
+<li><b>M</b> → Mute / Unmute Music</li>
+
+<li><b>←</b> dan <b>→</b> pada menu awal → Mengganti Skin Burung</li>
+
+</ul>
+
+<h2>🏆 Tips Bermain</h2>
+
+<ul>
+
+<li>Jangan terlalu sering menekan tombol terbang.</li>
+
+<li>Perhatikan ritme pipa, bukan hanya posisi burung.</li>
+
+<li>Usahakan mengambil Food Boost untuk memperoleh Double Score.</li>
+
+<li>Semakin tinggi level, semakin penting menjaga kestabilan kontrol.</li>
+
+<li>Latih timing agar dapat memperoleh skor tinggi dan medali Platinum.</li>
+
+</ul>
+
+<a class="btn" href="singleplayer.html">
+▶ Kembali ke Game
+</a>
 
 </div>
 
