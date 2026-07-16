@@ -1,0 +1,2490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flappy Bird — Multiplayer Duel (2 Players)</title>
+    <meta name="description" content="Head-to-head Flappy Bird battle! Two players compete side by side.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a3a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Outfit', sans-serif;
+            padding: 20px;
+        }
+
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* VS Header */
+        .vs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 60px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 12px 40px;
+            border-radius: 60px;
+            border: 1px solid rgba(255,215,0,0.3);
+            position: relative;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .player-card {
+            text-align: center;
+            min-width: 140px;
+            padding: 5px 10px;
+        }
+
+        .player-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            color: #fff;
+        }
+
+        .player-name {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .player1-name {
+            color: #FF6B6B;
+            text-shadow: 0 0 10px rgba(255,107,107,0.5);
+        }
+
+        .player2-name {
+            color: #4ECDC4;
+            text-shadow: 0 0 10px rgba(78,205,196,0.5);
+        }
+
+        .player-score {
+            font-size: 44px;
+            font-weight: 900;
+            line-height: 1;
+            font-family: monospace;
+            color: #fff;
+        }
+
+        .player-coins {
+            font-size: 16px;
+            color: #FFD700;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 700;
+        }
+
+        .player-coins img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px rgba(255,215,0,0.3));
+            mix-blend-mode: multiply;
+            background: transparent;
+        }
+
+        .vs-divider {
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 15px rgba(255,215,0,0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Dual Canvas Wrapper */
+        .dual-canvas {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+        }
+
+        .canvas-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        .canvas-wrapper.p1 {
+            border: 3px solid #FF6B6B;
+            box-shadow: 0 0 20px rgba(255,107,107,0.3);
+        }
+
+        .canvas-wrapper.p2 {
+            border: 3px solid #4ECDC4;
+            box-shadow: 0 0 20px rgba(78,205,196,0.3);
+        }
+
+        canvas {
+            display: block;
+            cursor: pointer;
+            background: #0a0a2a;
+            width: 480px;
+            height: 640px;
+        }
+
+        .player-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .player-badge.p1 {
+            color: #FF6B6B;
+            border-left: 3px solid #FF6B6B;
+        }
+
+        .player-badge.p2 {
+            color: #4ECDC4;
+            border-left: 3px solid #4ECDC4;
+        }
+
+        .control-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 10;
+            pointer-events: none;
+            font-family: monospace;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            display: flex;
+            gap: 40px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 12px 30px;
+            border-radius: 50px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .key {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-family: monospace;
+            font-size: 14px;
+            color: #FFD700;
+        }
+
+        .key-small {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        /* Buttons */
+        button {
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #restartBtn {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
+            color: white;
+        }
+
+        #menuBtn {
+            background: linear-gradient(135deg, #4ECDC4, #3BA89F);
+            color: white;
+        }
+
+        #shopBtn {
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            color: #1a1a2e;
+        }
+
+        #musicBtn {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+            color: white;
+        }
+
+        /* Winner Banner */
+        .winner-banner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            padding: 20px 40px;
+            border-radius: 60px;
+            font-size: 32px;
+            font-weight: 900;
+            color: #1a1a2e;
+            z-index: 1000;
+            box-shadow: 0 0 50px rgba(255,215,0,0.8);
+            animation: bounceIn 0.5s ease;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+            80% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .winner-banner.hidden {
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Mute Button */
+        #muteBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            font-size: 24px;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        /* Shop Modal */
+        .shop-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .shop-modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .shop-content {
+            background: linear-gradient(135deg, #1a1a3a, #2a2a5a);
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 800px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid rgba(255,215,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .shop-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .shop-content::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+
+        .shop-content::-webkit-scrollbar-thumb {
+            background: rgba(255,215,0,0.3);
+            border-radius: 10px;
+        }
+
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255,215,0,0.2);
+        }
+
+        .shop-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shop-title img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            vertical-align: middle;
+            mix-blend-mode: multiply;
+            background: transparent;
+        }
+
+        .shop-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shop-close:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+
+        .shop-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .shop-tab {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+        }
+
+        .shop-tab.active {
+            background: rgba(255,215,0,0.2);
+            color: #FFD700;
+            border-color: #FFD700;
+        }
+
+        .shop-tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .shop-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,215,0,0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .shop-item.owned {
+            border-color: #4ECDC4;
+            background: rgba(78,205,196,0.1);
+        }
+
+        .shop-item.equipped {
+            border-color: #FFD700;
+            background: rgba(255,215,0,0.1);
+            box-shadow: 0 0 30px rgba(255,215,0,0.2);
+        }
+
+        .shop-item-icon {
+            font-size: 48px;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .shop-item-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin: 8px 0;
+        }
+
+        .shop-item-price {
+            font-size: 14px;
+            color: #FFD700;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .shop-item-price img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            vertical-align: middle;
+            mix-blend-mode: multiply;
+            background: transparent;
+        }
+
+        .shop-item-status {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .status-owned {
+            color: #4ECDC4;
+            background: rgba(78,205,196,0.2);
+        }
+
+        .status-equip {
+            color: #FFD700;
+            background: rgba(255,215,0,0.2);
+        }
+
+        .shop-buy-btn {
+            margin-top: 10px;
+            padding: 8px 20px;
+            border-radius: 25px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .shop-buy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .shop-buy-btn.available {
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            color: #1a1a2e;
+        }
+
+        .shop-buy-btn.owned {
+            background: rgba(78,205,196,0.3);
+            color: #4ECDC4;
+            cursor: default;
+        }
+
+        .shop-buy-btn.equipped {
+            background: rgba(255,215,0,0.3);
+            color: #FFD700;
+            cursor: default;
+        }
+
+        .shop-buy-btn.locked {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.3);
+            cursor: not-allowed;
+        }
+
+        .shop-footer {
+            margin-top: 20px;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .shop-footer img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            vertical-align: middle;
+            mix-blend-mode: multiply;
+            background: transparent;
+        }
+
+        /* Music Modal */
+        .music-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .music-modal.active {
+            display: flex;
+        }
+
+        .music-content {
+            background: linear-gradient(135deg, #1a1a3a, #2a2a5a);
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 500px;
+            width: 95%;
+            border: 2px solid rgba(156,39,176,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .music-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(156,39,176,0.2);
+        }
+
+        .music-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #CE93D8;
+            text-shadow: 0 0 20px rgba(156,39,176,0.3);
+        }
+
+        .music-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .music-close:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+
+        .music-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .music-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .music-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(156,39,176,0.4);
+        }
+
+        .music-item.active {
+            border-color: #CE93D8;
+            background: rgba(156,39,176,0.2);
+            box-shadow: 0 0 30px rgba(156,39,176,0.2);
+        }
+
+        .music-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .music-item-icon {
+            font-size: 24px;
+        }
+
+        .music-item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .music-item-status {
+            font-size: 14px;
+            color: #CE93D8;
+            font-weight: 700;
+        }
+
+        .music-item-status.active {
+            color: #FFD700;
+        }
+
+        .music-current {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(156,39,176,0.1);
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(156,39,176,0.2);
+        }
+
+        .music-current-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .music-current-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #CE93D8;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 1100px) {
+            .dual-canvas {
+                gap: 15px;
+            }
+            canvas {
+                width: 400px;
+                height: 533px;
+            }
+            .player-score {
+                font-size: 32px;
+            }
+            .player-name {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .dual-canvas {
+                flex-direction: column;
+                gap: 20px;
+            }
+            canvas {
+                width: 480px;
+                height: 640px;
+            }
+            .vs-header {
+                gap: 30px;
+                padding: 10px 25px;
+            }
+            .player-card {
+                min-width: 100px;
+            }
+            .shop-items {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 550px) {
+            canvas {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 480/640;
+            }
+            .player-score {
+                font-size: 28px;
+            }
+            .vs-divider {
+                font-size: 20px;
+            }
+            .controls-bar {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            .shop-items {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+            .shop-content {
+                padding: 20px;
+            }
+            .vs-header {
+                gap: 15px;
+                padding: 10px 15px;
+            }
+            .player-card {
+                min-width: 80px;
+            }
+            .player-name {
+                font-size: 14px;
+            }
+            .player-coins {
+                font-size: 12px;
+            }
+            .player-coins img {
+                width: 16px;
+                height: 16px;
+            }
+            .winner-banner {
+                font-size: 20px;
+                padding: 15px 25px;
+                white-space: normal;
+            }
+            .music-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <!-- VS Header -->
+    <div class="vs-header">
+        <div class="player-card">
+            <div class="player-label">PLAYER 1</div>
+            <div class="player-name player1-name" id="p1Name">🐦 RED</div>
+            <div class="player-score" id="p1Score">0</div>
+            <div class="player-coins">
+                <img src="asset/koin.png" alt="Coin" class="coin-icon"> 
+                <span id="p1Coins">0</span>
+            </div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="player-card">
+            <div class="player-label">PLAYER 2</div>
+            <div class="player-name player2-name" id="p2Name">🐦 BLUE</div>
+            <div class="player-score" id="p2Score">0</div>
+            <div class="player-coins">
+                <img src="asset/koin.png" alt="Coin" class="coin-icon"> 
+                <span id="p2Coins">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dual Canvas -->
+    <div class="dual-canvas">
+        <!-- Player 1 Canvas -->
+        <div class="canvas-wrapper p1" id="canvasWrapperP1">
+            <canvas id="gameP1" width="480" height="640"></canvas>
+            <div class="player-badge p1">👑 PLAYER 1</div>
+            <div class="control-hint">⬆️ SPACE / CLICK</div>
+        </div>
+
+        <!-- Player 2 Canvas -->
+        <div class="canvas-wrapper p2" id="canvasWrapperP2">
+            <canvas id="gameP2" width="480" height="640"></canvas>
+            <div class="player-badge p2">🎮 PLAYER 2</div>
+            <div class="control-hint">🔼 UP ARROW</div>
+        </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="control-item">
+            <span class="key">P</span> <span>Pause Both</span>
+        </div>
+        <div class="control-item">
+            <span class="key">M</span> <span>Mute</span>
+        </div>
+        <div class="control-item">
+            <span class="key">R</span> <span>Restart</span>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button id="restartBtn">🔄 RESTART MATCH</button>
+        <button id="shopBtn">🛒 SHOP</button>
+        <button id="musicBtn">🎵 MUSIC</button>
+        <button id="menuBtn" onclick="window.location.href='/public/index.html'">
+    🏠 MAIN MENU
+</button>
+    </div>
+
+    <!-- Winner Banner -->
+    <div id="winnerBanner" class="winner-banner hidden"></div>
+
+    <!-- Mute Button -->
+    <button id="muteBtn" title="Toggle Sound">🔊</button>
+</div>
+
+<!-- Shop Modal -->
+<div id="shopModal" class="shop-modal">
+    <div class="shop-content">
+        <div class="shop-header">
+            <div class="shop-title">
+                🛒 Skin Shop
+                <img src="asset/koin.png" alt="Coin" class="coin-icon">
+                <span id="shopCoinsDisplay">0</span>
+            </div>
+            <button class="shop-close" id="shopCloseBtn">✕</button>
+        </div>
+        <div class="shop-tabs">
+            <button class="shop-tab active" data-tab="player1">Player 1 Skins</button>
+            <button class="shop-tab" data-tab="player2">Player 2 Skins</button>
+        </div>
+        <div id="shopItemsContainer" class="shop-items">
+            <!-- Items will be rendered here -->
+        </div>
+        <div class="shop-footer">
+            <img src="asset/koin.png" alt="Coin" class="coin-icon"> Earn coins by playing! Each game gives coins based on your score.
+        </div>
+    </div>
+</div>
+
+<!-- Music Modal -->
+<div id="musicModal" class="music-modal">
+    <div class="music-content">
+        <div class="music-header">
+            <div class="music-title">🎵 Background Music</div>
+            <button class="music-close" id="musicCloseBtn">✕</button>
+        </div>
+        <div id="musicList" class="music-list">
+            <!-- Music items will be rendered here -->
+        </div>
+        <div class="music-current">
+            <div class="music-current-label">CURRENTLY PLAYING</div>
+            <div class="music-current-name" id="currentMusicName">Bad Piggies Theme</div>
+        </div>
+    </div>
+</div>
+
+<!-- Audio Elements -->
+<audio id="soundtrack" loop>
+    <source src="music/BadPiggiesTheme.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="jumperMusic" loop>
+    <source src="music/jumper.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="gameOverSound">
+    <source src="music/DogNose.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="winnerSound">
+    <source src="music/cihuy.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="yahooSound">
+    <source src="music/yahoo.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+// ================================================
+// FLAPPY BIRD — MULTIPLAYER DUEL EDITION
+// 2 Players split-screen battle - INDEPENDENT!
+// WITH SKIN SHOP & MUSIC PLAYER & YAHOO SFX
+// ================================================
+
+// =====================
+// MUSIC SYSTEM
+// =====================
+const MUSIC_LIST = [
+    { id: 'bad_piggies', name: 'Bad Piggies Theme', file: 'BadPiggiesTheme.mp3', icon: '🐷' },
+    { id: 'jumper', name: 'Jumper', file: 'jumper.mp3', icon: '🎵' }
+];
+
+let currentMusicId = 'bad_piggies';
+const audioElements = {
+    bad_piggies: document.getElementById('soundtrack'),
+    jumper: document.getElementById('jumperMusic')
+};
+
+// Function to change music
+function changeMusic(musicId) {
+    // Stop all music
+    Object.values(audioElements).forEach(audio => {
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    });
+    
+    currentMusicId = musicId;
+    const selectedAudio = audioElements[musicId];
+    
+    if (selectedAudio && !muted) {
+        selectedAudio.volume = 0.5;
+        selectedAudio.loop = true;
+        selectedAudio.play().catch(err => {
+            console.log('Music play error:', err);
+        });
+        musicStarted = true;
+    }
+    
+    // Update music display
+    updateMusicDisplay();
+    saveMusicPreference();
+}
+
+// Save music preference
+function saveMusicPreference() {
+    try {
+        localStorage.setItem('flappyBirdMusicPreference', currentMusicId);
+    } catch (e) {}
+}
+
+// Load music preference
+function loadMusicPreference() {
+    try {
+        const saved = localStorage.getItem('flappyBirdMusicPreference');
+        if (saved && audioElements[saved]) {
+            currentMusicId = saved;
+        }
+    } catch (e) {}
+}
+
+// Update music display in modal
+function updateMusicDisplay() {
+    const musicList = document.getElementById('musicList');
+    const currentNameEl = document.getElementById('currentMusicName');
+    
+    if (!musicList) return;
+    
+    musicList.innerHTML = '';
+    
+    MUSIC_LIST.forEach(music => {
+        const isActive = currentMusicId === music.id;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `music-item ${isActive ? 'active' : ''}`;
+        itemDiv.innerHTML = `
+            <div class="music-item-info">
+                <span class="music-item-icon">${music.icon}</span>
+                <span class="music-item-name">${music.name}</span>
+            </div>
+            <span class="music-item-status ${isActive ? 'active' : ''}">
+                ${isActive ? '▶ Playing' : ''}
+            </span>
+        `;
+        
+        itemDiv.addEventListener('click', function() {
+            changeMusic(music.id);
+            renderMusicList();
+        });
+        
+        musicList.appendChild(itemDiv);
+    });
+    
+    // Update current playing name
+    const currentMusic = MUSIC_LIST.find(m => m.id === currentMusicId);
+    if (currentNameEl && currentMusic) {
+        currentNameEl.textContent = `${currentMusic.icon} ${currentMusic.name}`;
+    }
+}
+
+function renderMusicList() {
+    updateMusicDisplay();
+}
+
+// Music modal controls
+const musicBtn = document.getElementById('musicBtn');
+const musicModal = document.getElementById('musicModal');
+const musicCloseBtn = document.getElementById('musicCloseBtn');
+
+if (musicBtn) {
+    musicBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        musicModal.classList.add('active');
+        renderMusicList();
+    });
+}
+
+if (musicCloseBtn) {
+    musicCloseBtn.addEventListener('click', function() {
+        musicModal.classList.remove('active');
+    });
+}
+
+musicModal.addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.remove('active');
+    }
+});
+
+// =====================
+// DOM Elements
+// =====================
+const canvasP1 = document.getElementById("gameP1");
+const ctxP1 = canvasP1.getContext("2d");
+const canvasP2 = document.getElementById("gameP2");
+const ctxP2 = canvasP2.getContext("2d");
+
+const p1ScoreEl = document.getElementById("p1Score");
+const p2ScoreEl = document.getElementById("p2Score");
+const p1CoinsEl = document.getElementById("p1Coins");
+const p2CoinsEl = document.getElementById("p2Coins");
+const bgMusic = document.getElementById("soundtrack");
+const gameOverSound = document.getElementById("gameOverSound");
+const winnerSound = document.getElementById("winnerSound");
+const yahooSound = document.getElementById("yahooSound");
+const muteBtn = document.getElementById("muteBtn");
+const winnerBanner = document.getElementById("winnerBanner");
+const restartBtn = document.getElementById("restartBtn");
+const menuBtn = document.getElementById("menuBtn");
+const shopBtn = document.getElementById("shopBtn");
+const shopModal = document.getElementById("shopModal");
+const shopCloseBtn = document.getElementById("shopCloseBtn");
+const shopItemsContainer = document.getElementById("shopItemsContainer");
+const shopCoinsDisplay = document.getElementById("shopCoinsDisplay");
+
+// =====================
+// LOAD COIN IMAGE (dari folder asset)
+// =====================
+const COIN_IMAGE_PATH = 'asset/koin.png';
+
+// =====================
+// SKIN SHOP SYSTEM - PER PLAYER COINS
+// =====================
+
+// Skin data
+const SKIN_DATA = {
+    player1: [
+        { id: 'p1_red', name: 'Red Bird', color: '#FF6B6B', price: 0, default: true },
+        { id: 'p1_blue', name: 'Blue Bird', color: '#4A9BD9', price: 100 },
+        { id: 'p1_gold', name: 'Golden Bird', color: '#FFD700', price: 200 },
+        { id: 'p1_dragon', name: 'Dragon', color: '#FF4444', price: 300 },
+        { id: 'p1_phoenix', name: 'Phoenix', color: '#FF6B35', price: 500 },
+        { id: 'p1_owl', name: 'Owl', color: '#8B6914', price: 150 },
+        { id: 'p1_eagle', name: 'Eagle', color: '#5D4037', price: 250 },
+        { id: 'p1_parrot', name: 'Parrot', color: '#4CAF50', price: 180 },
+        { id: 'p1_penguin', name: 'Penguin', color: '#37474F', price: 200 },
+        { id: 'p1_raven', name: 'Raven', color: '#212121', price: 280 },
+    ],
+    player2: [
+        { id: 'p2_blue', name: 'Blue Bird', color: '#4ECDC4', price: 0, default: true },
+        { id: 'p2_green', name: 'Green Bird', color: '#4CAF50', price: 100 },
+        { id: 'p2_silver', name: 'Silver Bird', color: '#BDBDBD', price: 200 },
+        { id: 'p2_raven', name: 'Raven', color: '#212121', price: 300 },
+        { id: 'p2_peacock', name: 'Peacock', color: '#1A237E', price: 400 },
+        { id: 'p2_swan', name: 'Swan', color: '#FFFFFF', price: 150 },
+        { id: 'p2_hawk', name: 'Hawk', color: '#795548', price: 250 },
+        { id: 'p2_penguin', name: 'Penguin', color: '#37474F', price: 200 },
+        { id: 'p2_parrot', name: 'Parrot', color: '#E91E63', price: 180 },
+        { id: 'p2_eagle', name: 'Eagle', color: '#4E342E', price: 260 },
+    ]
+};
+
+// Game data - saved in localStorage
+let gameData = {
+    player1: {
+        coins: 0,
+        owned: ['p1_red'],
+        equipped: 'p1_red'
+    },
+    player2: {
+        coins: 0,
+        owned: ['p2_blue'],
+        equipped: 'p2_blue'
+    }
+};
+
+// Track last milestone for each player
+let lastMilestoneP1 = 0;
+let lastMilestoneP2 = 0;
+
+// Load saved data
+function loadGameData() {
+    try {
+        const saved = localStorage.getItem('flappyBirdSkinData');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            gameData.player1.coins = parsed.player1?.coins || 0;
+            gameData.player1.owned = parsed.player1?.owned || ['p1_red'];
+            gameData.player1.equipped = parsed.player1?.equipped || 'p1_red';
+            gameData.player2.coins = parsed.player2?.coins || 0;
+            gameData.player2.owned = parsed.player2?.owned || ['p2_blue'];
+            gameData.player2.equipped = parsed.player2?.equipped || 'p2_blue';
+        }
+    } catch (e) {
+        console.log('Error loading saved data, using defaults');
+    }
+    saveGameData();
+}
+
+function saveGameData() {
+    try {
+        localStorage.setItem('flappyBirdSkinData', JSON.stringify(gameData));
+    } catch (e) {
+        console.log('Error saving game data');
+    }
+}
+
+// Play Yahoo SFX ketika melewati kelipatan 5 pipa
+function playYahooSFX(player) {
+    if (muted) return;
+    if (yahooSound) {
+        yahooSound.currentTime = 0;
+        yahooSound.play().catch(err => {
+            console.log('Yahoo sound error:', err);
+        });
+    }
+    
+    // Tampilkan efek visual "YAHOO!"
+    const container = document.getElementById('gameContainer');
+    if (!container) return;
+    
+    const popup = document.createElement('div');
+    const isPlayer1 = player === p1;
+    const color = isPlayer1 ? '#FF6B6B' : '#4ECDC4';
+    const position = isPlayer1 ? '25%' : '75%';
+    
+    popup.style.cssText = `
+        position: fixed;
+        top: ${position};
+        left: 50%;
+        transform: translateX(-50%);
+        color: ${color};
+        font-size: 48px;
+        font-weight: 900;
+        z-index: 1000;
+        pointer-events: none;
+        animation: yahooBounce 1.5s ease-out forwards;
+        text-shadow: 0 0 30px ${color}, 0 0 60px ${color}44;
+        font-family: 'Outfit', sans-serif;
+        background: rgba(0,0,0,0.6);
+        padding: 10px 30px;
+        border-radius: 30px;
+        border: 3px solid ${color};
+        backdrop-filter: blur(5px);
+    `;
+    
+    popup.textContent = '🎉 YAHOO! 🎉';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes yahooBounce {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.3) rotate(-10deg); }
+            30% { opacity: 1; transform: translateX(-50%) scale(1.3) rotate(5deg); }
+            60% { transform: translateX(-50%) scale(0.9) rotate(-3deg); }
+            80% { transform: translateX(-50%) scale(1.1) rotate(2deg); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1) rotate(0deg); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    container.appendChild(popup);
+    
+    setTimeout(() => {
+        popup.remove();
+        style.remove();
+    }, 2000);
+}
+
+// Earn coins based on score untuk masing-masing player
+function earnCoins(player, score) {
+    const earned = Math.floor(score / 2) + 1;
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    gameData[playerKey].coins += earned;
+    updateCoinsDisplay();
+    saveGameData();
+    showCoinEarned(player, earned);
+    return earned;
+}
+
+// Tampilkan animasi koin yang didapat
+function showCoinEarned(player, amount) {
+    const container = document.getElementById('gameContainer');
+    if (!container) return;
+    
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+        position: fixed;
+        top: ${player === 1 ? '30%' : '70%'};
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.85);
+        color: #FFD700;
+        padding: 12px 24px;
+        border-radius: 20px;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 1000;
+        pointer-events: none;
+        animation: floatUp 1.5s ease-out forwards;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 2px solid #FFD700;
+        font-family: 'Outfit', sans-serif;
+        box-shadow: 0 0 30px rgba(255,215,0,0.3);
+    `;
+    
+    const coinImg = document.createElement('img');
+    coinImg.src = COIN_IMAGE_PATH;
+    coinImg.style.cssText = `
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+        filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));
+        mix-blend-mode: multiply;
+        background: transparent;
+    `;
+    
+    popup.innerHTML = `+${amount} `;
+    popup.prepend(coinImg);
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-120px) scale(1.3); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    container.appendChild(popup);
+    
+    setTimeout(() => {
+        popup.remove();
+        style.remove();
+    }, 1500);
+}
+
+// Update coins display dengan gambar koin
+function updateCoinsDisplay() {
+    if (p1CoinsEl) p1CoinsEl.textContent = gameData.player1.coins;
+    if (p2CoinsEl) p2CoinsEl.textContent = gameData.player2.coins;
+    if (shopCoinsDisplay) {
+        const currentTab = currentShopTab === 'player1' ? 1 : 2;
+        shopCoinsDisplay.textContent = getPlayerCoins(currentTab);
+    }
+}
+
+// Check if player owns a skin
+function ownsSkin(player, skinId) {
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    return gameData[playerKey].owned.includes(skinId);
+}
+
+// Check if player has equipped a skin
+function isEquipped(player, skinId) {
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    return gameData[playerKey].equipped === skinId;
+}
+
+// Get player coins
+function getPlayerCoins(player) {
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    return gameData[playerKey].coins;
+}
+
+// Buy a skin
+function buySkin(player, skinId) {
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    const skinData = SKIN_DATA[playerKey].find(s => s.id === skinId);
+    
+    if (!skinData) return { success: false, message: 'Skin not found' };
+    if (ownsSkin(player, skinId)) return { success: false, message: 'Already owned' };
+    if (gameData[playerKey].coins < skinData.price) return { success: false, message: 'Not enough coins' };
+    
+    gameData[playerKey].coins -= skinData.price;
+    gameData[playerKey].owned.push(skinId);
+    saveGameData();
+    updateCoinsDisplay();
+    
+    return { success: true, message: 'Skin purchased!' };
+}
+
+// Equip a skin
+function equipSkin(player, skinId) {
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    if (!ownsSkin(player, skinId)) return { success: false, message: 'Skin not owned' };
+    
+    gameData[playerKey].equipped = skinId;
+    saveGameData();
+    
+    const bird = player === 1 ? p1.bird : p2.bird;
+    const skin = SKIN_DATA[playerKey].find(s => s.id === skinId);
+    if (skin) {
+        bird.skinColor = skin.color;
+    }
+    
+    return { success: true, message: 'Skin equipped!' };
+}
+
+// Get current skin for a player
+function getCurrentSkin(player) {
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    const equipped = gameData[playerKey].equipped;
+    return SKIN_DATA[playerKey].find(s => s.id === equipped) || SKIN_DATA[playerKey][0];
+}
+
+// =====================
+// SHOP UI
+// =====================
+let currentShopTab = 'player1';
+
+// Render shop items
+function renderShop() {
+    const playerKey = currentShopTab;
+    const skins = SKIN_DATA[playerKey];
+    const playerNum = playerKey === 'player1' ? 1 : 2;
+    const playerCoins = getPlayerCoins(playerNum);
+    const playerName = playerNum === 1 ? 'Player 1' : 'Player 2';
+    
+    // Update shop coins display
+    if (shopCoinsDisplay) {
+        shopCoinsDisplay.textContent = playerCoins;
+    }
+    
+    // Update shop title
+    const titleEl = document.querySelector('.shop-title');
+    if (titleEl) {
+        titleEl.innerHTML = `
+            🛒 ${playerName}'s Shop
+            <img src="${COIN_IMAGE_PATH}" alt="Coin" class="coin-icon" style="mix-blend-mode:multiply;background:transparent;">
+            <span id="shopCoinsDisplay">${playerCoins}</span>
+        `;
+    }
+    
+    shopItemsContainer.innerHTML = '';
+    
+    skins.forEach(skin => {
+        const owned = ownsSkin(playerNum, skin.id);
+        const equipped = isEquipped(playerNum, skin.id);
+        const isDefault = skin.price === 0;
+        const canAfford = playerCoins >= skin.price;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'shop-item';
+        if (owned) itemDiv.classList.add('owned');
+        if (equipped) itemDiv.classList.add('equipped');
+        
+        let statusText = '';
+        let statusClass = '';
+        let buttonHTML = '';
+        
+        if (equipped) {
+            statusText = '✓ Equipped';
+            statusClass = 'status-equip';
+            buttonHTML = `<button class="shop-buy-btn equipped" disabled>Equipped</button>`;
+        } else if (owned) {
+            statusText = 'Owned';
+            statusClass = 'status-owned';
+            buttonHTML = `<button class="shop-buy-btn available" data-action="equip" data-player="${playerNum}" data-skin="${skin.id}">Equip</button>`;
+        } else {
+            statusText = isDefault ? 'Free' : `${skin.price}`;
+            statusClass = '';
+            buttonHTML = `<button class="shop-buy-btn ${canAfford ? 'available' : 'locked'}" data-action="buy" data-player="${playerNum}" data-skin="${skin.id}" ${!canAfford ? 'disabled' : ''}>
+                ${canAfford ? 'Buy' : `Need ${skin.price - playerCoins} more`}
+            </button>`;
+        }
+        
+        const previewColor = skin.color;
+        
+        itemDiv.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:8px;">
+                <div style="width:30px; height:30px; border-radius:50%; background:${previewColor}; border:2px solid rgba(255,255,255,0.3);"></div>
+                <span style="font-size:20px;">🐦</span>
+            </div>
+            <div class="shop-item-name">${skin.name}</div>
+            <div class="shop-item-price">
+                ${isDefault ? 'FREE' : `<img src="${COIN_IMAGE_PATH}" alt="Coin" class="coin-icon" style="mix-blend-mode:multiply;background:transparent;width:16px;height:16px;"> ${skin.price}`}
+            </div>
+            <div class="shop-item-status ${statusClass}">${statusText}</div>
+            ${buttonHTML}
+        `;
+        
+        shopItemsContainer.appendChild(itemDiv);
+    });
+    
+    // Add event listeners to buttons
+    document.querySelectorAll('.shop-buy-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const action = this.dataset.action;
+            const player = parseInt(this.dataset.player);
+            const skinId = this.dataset.skin;
+            
+            if (action === 'buy') {
+                const result = buySkin(player, skinId);
+                if (result.success) {
+                    renderShop();
+                    updateBirdDisplay();
+                    updateCoinsDisplay();
+                } else {
+                    alert(result.message);
+                }
+            } else if (action === 'equip') {
+                const result = equipSkin(player, skinId);
+                if (result.success) {
+                    renderShop();
+                    updateBirdDisplay();
+                } else {
+                    alert(result.message);
+                }
+            }
+        });
+    });
+}
+
+// Update bird display with current skins
+function updateBirdDisplay() {
+    const skin1 = getCurrentSkin(1);
+    const skin2 = getCurrentSkin(2);
+    
+    if (p1.bird) p1.bird.skinColor = skin1.color;
+    if (p2.bird) p2.bird.skinColor = skin2.color;
+    
+    const p1NameEl = document.getElementById('p1Name');
+    const p2NameEl = document.getElementById('p2Name');
+    if (p1NameEl) p1NameEl.textContent = `🐦 ${skin1.name}`;
+    if (p2NameEl) p2NameEl.textContent = `🐦 ${skin2.name}`;
+}
+
+// Shop event listeners
+if (shopBtn) {
+    shopBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        shopModal.classList.add('active');
+        renderShop();
+    });
+}
+
+if (shopCloseBtn) {
+    shopCloseBtn.addEventListener('click', function() {
+        shopModal.classList.remove('active');
+    });
+}
+
+shopModal.addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.remove('active');
+    }
+});
+
+document.querySelectorAll('.shop-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentShopTab = this.dataset.tab;
+        renderShop();
+    });
+});
+
+// =====================
+// Global State
+// =====================
+let paused = false;
+let muted = false;
+let frameCount = 0;
+let winnerDeclared = false;
+let skyPhase = 0;
+let musicStarted = false;
+
+const W = 480;
+const H = 640;
+
+// =====================
+// Player 1 State
+// =====================
+let p1 = {
+    bird: { 
+        x: 80, 
+        y: H/2, 
+        width: 34, 
+        height: 34, 
+        vel: 0, 
+        rot: 0, 
+        wing: 0,
+        skinColor: '#FF6B6B'
+    },
+    score: 0,
+    over: false,
+    pipes: [],
+    particles: [],
+    popups: [],
+    pipeTimer: 0,
+    groundX: 0,
+    started: false,
+    canPlay: true
+};
+
+// =====================
+// Player 2 State
+// =====================
+let p2 = {
+    bird: { 
+        x: 80, 
+        y: H/2, 
+        width: 34, 
+        height: 34, 
+        vel: 0, 
+        rot: 0, 
+        wing: 0,
+        skinColor: '#4ECDC4'
+    },
+    score: 0,
+    over: false,
+    pipes: [],
+    particles: [],
+    popups: [],
+    pipeTimer: 0,
+    groundX: 0,
+    started: false,
+    canPlay: true
+};
+
+// =====================
+// Game Constants
+// =====================
+const GRAVITY = 0.14;
+const JUMP_FORCE = -4.0;
+const BASE_PIPE_SPEED = 1.8;
+const BASE_PIPE_INTERVAL = 160;
+const BASE_GAP = 180;
+const GROUND_TOP = H - 55;
+
+function getPipeSpeed() { 
+    const avgScore = (p1.score + p2.score) / 2;
+    return BASE_PIPE_SPEED + avgScore * 0.02; 
+}
+
+function getPipeGap() { 
+    const avgScore = (p1.score + p2.score) / 2;
+    return Math.max(180, BASE_GAP - avgScore * 1.5);
+}
+
+function getPipeInterval() { 
+    const avgScore = (p1.score + p2.score) / 2;
+    return Math.max(110, BASE_PIPE_INTERVAL - avgScore * 0.6);
+}
+
+// =====================
+// Stars & Clouds
+// =====================
+let stars = [];
+let clouds = [];
+
+for (let i = 0; i < 60; i++) {
+    stars.push({ x: Math.random() * W, y: Math.random() * H * 0.6, size: Math.random() * 2 + 0.5, twinkle: Math.random() * Math.PI * 2 });
+}
+
+for (let i = 0; i < 5; i++) {
+    clouds.push({ x: Math.random() * W + i * 100, y: Math.random() * 120 + 40, size: Math.random() * 30 + 25, speed: Math.random() * 0.3 + 0.2, opacity: Math.random() * 0.3 + 0.2 });
+}
+
+// =====================
+// Audio
+// =====================
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (AudioContext || webkitAudioContext)();
+    return audioCtx;
+}
+
+function playSound(type) {
+    if (muted) return;
+    try {
+        const ctx = getAudio();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        if (type === "jump") {
+            osc.type = "sine";
+            osc.frequency.value = 500;
+            osc.frequency.exponentialRampToValue(800, 0.08);
+            gain.gain.value = 0.12;
+            gain.gain.exponentialRampToValue(0.001, 0.15);
+            osc.start();
+            osc.stop(0.15);
+        } else if (type === "score") {
+            osc.type = "sine";
+            osc.frequency.value = 880;
+            osc.frequency.exponentialRampToValue(1100, 0.08);
+            gain.gain.value = 0.1;
+            gain.gain.exponentialRampToValue(0.001, 0.2);
+            osc.start();
+            osc.stop(0.2);
+        } else if (type === "hit") {
+            osc.type = "square";
+            osc.frequency.value = 150;
+            osc.frequency.exponentialRampToValue(50, 0.3);
+            gain.gain.value = 0.15;
+            gain.gain.exponentialRampToValue(0.001, 0.3);
+            osc.start();
+            osc.stop(0.3);
+        }
+    } catch(e) {}
+}
+
+function playGameOverSound() {
+    if (muted) return;
+    if (winnerDeclared) return;
+    if (gameOverSound) {
+        gameOverSound.currentTime = 0;
+        gameOverSound.play().catch(err => {});
+    }
+}
+
+function playWinnerSound() {
+    if (muted) return;
+    if (winnerSound) {
+        winnerSound.currentTime = 0;
+        winnerSound.play().catch(err => {});
+    }
+}
+
+function startMusic() {
+    if (musicStarted) return;
+    if (muted) return;
+    
+    const selectedAudio = audioElements[currentMusicId];
+    if (selectedAudio) {
+        selectedAudio.volume = 0.5;
+        selectedAudio.loop = true;
+        selectedAudio.play().catch(err => {});
+        musicStarted = true;
+    }
+}
+
+function stopMusic() {
+    Object.values(audioElements).forEach(audio => {
+        if (audio && !audio.paused) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    });
+    musicStarted = false;
+}
+
+// =====================
+// Particles & Popups
+// =====================
+function addParticles(arr, x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const vel = Math.random() * 3 + 1;
+        arr.push({
+            x, y,
+            vx: Math.cos(angle) * vel,
+            vy: Math.sin(angle) * vel,
+            life: 40,
+            size: Math.random() * 4 + 2,
+            color: color
+        });
+    }
+}
+
+function updateParticles(arr) {
+    for (let i = arr.length - 1; i >= 0; i--) {
+        const p = arr[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05;
+        p.life--;
+        if (p.life <= 0) arr.splice(i, 1);
+    }
+}
+
+function drawParticles(ctx, arr) {
+    for (const p of arr) {
+        const alpha = p.life / 40;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function addPopup(arr, x, y, text) {
+    arr.push({ x, y, text, life: 50, maxLife: 50 });
+}
+
+function updatePopups(arr) {
+    for (let i = arr.length - 1; i >= 0; i--) {
+        arr[i].y -= 1.2;
+        arr[i].life--;
+        if (arr[i].life <= 0) arr.splice(i, 1);
+    }
+}
+
+function drawPopups(ctx, arr) {
+    for (const p of arr) {
+        const alpha = p.life / p.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#FFD700";
+        ctx.font = `bold ${18 + (1 - alpha) * 8}px Outfit, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+}
+
+// =====================
+// Drawing Functions
+// =====================
+function drawSky(ctx) {
+    skyPhase += 0.0003;
+    const cycle = (Math.sin(skyPhase) + 1) / 2;
+
+    const dayTop = [135, 206, 235];
+    const dayBot = [176, 224, 230];
+    const nightTop = [15, 12, 41];
+    const nightBot = [44, 42, 87];
+
+    const topR = nightTop[0] + (dayTop[0] - nightTop[0]) * cycle;
+    const topG = nightTop[1] + (dayTop[1] - nightTop[1]) * cycle;
+    const topB = nightTop[2] + (dayTop[2] - nightTop[2]) * cycle;
+    const botR = nightBot[0] + (dayBot[0] - nightBot[0]) * cycle;
+    const botG = nightBot[1] + (dayBot[1] - nightBot[1]) * cycle;
+    const botB = nightBot[2] + (dayBot[2] - nightBot[2]) * cycle;
+
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, `rgb(${topR},${topG},${topB})`);
+    grad.addColorStop(1, `rgb(${botR},${botG},${botB})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    if (cycle < 0.6) {
+        const starAlpha = Math.max(0, (0.6 - cycle) / 0.6);
+        stars.forEach(s => {
+            const twinkle = (Math.sin(frameCount * 0.03 + s.twinkle) + 1) / 2;
+            ctx.globalAlpha = starAlpha * twinkle * 0.8;
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+    }
+}
+
+function drawClouds(ctx) {
+    clouds.forEach(c => {
+        ctx.globalAlpha = c.opacity;
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+        ctx.arc(c.x + c.size * 0.8, c.y - c.size * 0.2, c.size * 0.7, 0, Math.PI * 2);
+        ctx.arc(c.x + c.size * 1.5, c.y, c.size * 0.85, 0, Math.PI * 2);
+        ctx.arc(c.x + c.size * 0.4, c.y - c.size * 0.35, c.size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+}
+
+function updateClouds() {
+    clouds.forEach(c => {
+        c.x -= c.speed;
+        if (c.x < -c.size * 3) {
+            c.x = W + Math.random() * 80;
+            c.y = Math.random() * 120 + 40;
+        }
+    });
+}
+
+function drawGround(ctx, groundX) {
+    const dirtGrad = ctx.createLinearGradient(0, GROUND_TOP, 0, H);
+    dirtGrad.addColorStop(0, "#5D4037");
+    dirtGrad.addColorStop(1, "#3E2723");
+    ctx.fillStyle = dirtGrad;
+    ctx.fillRect(0, GROUND_TOP, W, 55);
+
+    const grassGrad = ctx.createLinearGradient(0, GROUND_TOP, 0, GROUND_TOP + 20);
+    grassGrad.addColorStop(0, "#66BB6A");
+    grassGrad.addColorStop(1, "#43A047");
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, GROUND_TOP, W, 20);
+
+    ctx.fillStyle = "#81C784";
+    for (let i = groundX; i < W + 48; i += 12) {
+        ctx.beginPath();
+        ctx.moveTo(i, GROUND_TOP);
+        ctx.lineTo(i + 4, GROUND_TOP - 10);
+        ctx.lineTo(i + 8, GROUND_TOP);
+        ctx.fill();
+    }
+
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    for (let i = groundX; i < W + 48; i += 48) {
+        ctx.fillRect(i, GROUND_TOP + 20, 24, 35);
+        ctx.fillRect(i + 24, GROUND_TOP + 37, 24, 18);
+    }
+}
+
+function createPipe(player) {
+    const gap = getPipeGap();
+    const minTop = 60;
+    const maxTop = GROUND_TOP - gap - 60;
+    const topHeight = Math.random() * (maxTop - minTop) + minTop;
+
+    player.pipes.push({
+        x: W + 10,
+        width: 62,
+        top: topHeight,
+        bottom: topHeight + gap,
+        scored: false
+    });
+}
+
+function drawPipes(ctx, pipes) {
+    pipes.forEach(pipe => {
+        const bodyGrad = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
+        bodyGrad.addColorStop(0, "#2E7D32");
+        bodyGrad.addColorStop(0.3, "#4CAF50");
+        bodyGrad.addColorStop(0.7, "#388E3C");
+        bodyGrad.addColorStop(1, "#1B5E20");
+
+        ctx.fillStyle = bodyGrad;
+        ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+        ctx.fillRect(pipe.x, pipe.bottom, pipe.width, GROUND_TOP - pipe.bottom);
+
+        const capW = pipe.width + 12;
+        const capH = 26;
+        const capX = pipe.x - 6;
+
+        const capGrad = ctx.createLinearGradient(capX, 0, capX + capW, 0);
+        capGrad.addColorStop(0, "#388E3C");
+        capGrad.addColorStop(0.3, "#66BB6A");
+        capGrad.addColorStop(0.7, "#43A047");
+        capGrad.addColorStop(1, "#2E7D32");
+
+        ctx.fillStyle = capGrad;
+        ctx.fillRect(capX, pipe.top - capH, capW, capH);
+        ctx.fillRect(capX, pipe.bottom, capW, capH);
+
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.fillRect(pipe.x + 8, 0, 6, pipe.top - capH);
+        ctx.fillRect(pipe.x + 8, pipe.bottom + capH, 6, GROUND_TOP - pipe.bottom - capH);
+
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.fillRect(pipe.x + pipe.width - 4, 0, 4, pipe.top - capH);
+        ctx.fillRect(pipe.x + pipe.width - 4, pipe.bottom + capH, 4, GROUND_TOP - pipe.bottom - capH);
+    });
+}
+
+// =====================
+// DRAW BIRD (dengan skin color)
+// =====================
+function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.min(255, (num >> 16) + amt);
+    const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+    const B = Math.min(255, (num & 0x0000FF) + amt);
+    return `rgb(${R},${G},${B})`;
+}
+
+function darkenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.max(0, (num >> 16) - amt);
+    const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+    const B = Math.max(0, (num & 0x0000FF) - amt);
+    return `rgb(${R},${G},${B})`;
+}
+
+function drawBird(ctx, bird, isPlayer1) {
+    ctx.save();
+    const cx = bird.x + bird.width / 2;
+    const cy = bird.y + bird.height / 2;
+
+    const targetRot = Math.min(Math.max(bird.vel * 4, -30), 70);
+    bird.rot += (targetRot - bird.rot) * 0.12;
+    ctx.translate(cx, cy);
+    ctx.rotate(bird.rot * Math.PI / 180);
+
+    bird.wing += 0.2;
+    const wingY = Math.sin(bird.wing * 3) * 4;
+
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(2, 3, 16, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const bodyColor = bird.skinColor || (isPlayer1 ? '#FF6B6B' : '#4ECDC4');
+    const bodyGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 16);
+    bodyGrad.addColorStop(0, lightenColor(bodyColor, 30));
+    bodyGrad.addColorStop(0.7, bodyColor);
+    bodyGrad.addColorStop(1, darkenColor(bodyColor, 20));
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 16, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = isPlayer1 ? "#FFB300" : "#FFA500";
+    ctx.beginPath();
+    ctx.ellipse(-6, 3 + wingY, 9, 6, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(7, -4, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#1a1a1a";
+    ctx.beginPath();
+    ctx.arc(8.5, -3.5, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(9.5, -5, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#FF6D00";
+    ctx.beginPath();
+    ctx.moveTo(13, -1);
+    ctx.lineTo(22, -3);
+    ctx.lineTo(22, 3);
+    ctx.lineTo(13, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// =====================
+// Game Logic
+// =====================
+function updateBird(player) {
+    if (paused) return;
+    if (player.over) return;
+    if (!player.started) return;
+    
+    player.bird.vel += GRAVITY;
+    player.bird.y += player.bird.vel;
+    
+    if (player.bird.y < 0) {
+        player.bird.y = 0;
+        player.bird.vel = 0;
+    }
+    
+    if (player.bird.y + player.bird.height >= GROUND_TOP) {
+        if (!player.over) {
+            player.over = true;
+            player.bird.y = GROUND_TOP - player.bird.height;
+            checkWinner();
+            playSound("hit");
+            playGameOverSound();
+            addParticles(player.particles, player.bird.x + 17, player.bird.y + 17, 30, "#FF5722");
+            addParticles(player.particles, player.bird.x + 17, player.bird.y + 17, 15, "#FFEB3B");
+        }
+    }
+}
+
+function updatePipes(player) {
+    if (paused) return;
+    if (player.over) return;
+    if (!player.started) return;
+    
+    const speed = getPipeSpeed();
+
+    for (let i = 0; i < player.pipes.length; i++) {
+        const pipe = player.pipes[i];
+        pipe.x -= speed;
+
+        const hb = 4;
+        if (player.bird.x + player.bird.width - hb > pipe.x && 
+            player.bird.x + hb < pipe.x + pipe.width) {
+            if (player.bird.y + hb < pipe.top || 
+                player.bird.y + player.bird.height - hb > pipe.bottom) {
+                if (!player.over) {
+                    player.over = true;
+                    checkWinner();
+                    playSound("hit");
+                    playGameOverSound();
+                    addParticles(player.particles, player.bird.x + 17, player.bird.y + 17, 30, "#FF5722");
+                    addParticles(player.particles, player.bird.x + 17, player.bird.y + 17, 15, "#FFEB3B");
+                }
+            }
+        }
+
+        if (!pipe.scored && pipe.x + pipe.width < player.bird.x) {
+            pipe.scored = true;
+            player.score++;
+            
+            // Check for milestone (every 5 pipes)
+            if (player.score % 5 === 0 && player.score > 0) {
+                const milestone = player.score / 5;
+                if (player === p1 && milestone > lastMilestoneP1) {
+                    lastMilestoneP1 = milestone;
+                    playYahooSFX(player);
+                } else if (player === p2 && milestone > lastMilestoneP2) {
+                    lastMilestoneP2 = milestone;
+                    playYahooSFX(player);
+                }
+            }
+            
+            if (player === p1) p1ScoreEl.textContent = player.score;
+            else p2ScoreEl.textContent = player.score;
+            
+            addPopup(player.popups, player.bird.x, player.bird.y - 20, "+1");
+            playSound("score");
+            
+            const pipeCenter = pipe.x + pipe.width / 2;
+            const gapCenter = (pipe.top + pipe.bottom) / 2;
+            addParticles(player.particles, pipeCenter, gapCenter, 8, "#FFD700");
+        }
+    }
+    
+    player.pipes = player.pipes.filter(p => p.x + p.width > -20);
+}
+
+function jump(player, isPlayer1) {
+    if (!musicStarted && !muted) {
+        startMusic();
+    }
+    
+    if (!player.started) {
+        player.started = true;
+        player.bird.vel = JUMP_FORCE;
+        player.bird.wing = 0;
+        addParticles(player.particles, player.bird.x, player.bird.y + player.bird.height, 4, "rgba(255,255,255,0.5)");
+        playSound("jump");
+        return;
+    }
+    
+    if (paused) return;
+    if (player.over) return;
+    
+    player.bird.vel = JUMP_FORCE;
+    player.bird.wing = 0;
+    addParticles(player.particles, player.bird.x, player.bird.y + player.bird.height, 4, "rgba(255,255,255,0.5)");
+    playSound("jump");
+}
+
+function checkWinner() {
+    if (winnerDeclared) return;
+    
+    if (p1.over && p2.over) {
+        let winnerText = "";
+        let winnerColor = "";
+        
+        if (p1.score > p2.score) {
+            winnerText = "PLAYER 1 WINS! 🏆";
+            winnerColor = "#FF6B6B";
+            playWinnerSound();
+            earnCoins(1, p1.score);
+        } else if (p2.score > p1.score) {
+            winnerText = "PLAYER 2 WINS! 🏆";
+            winnerColor = "#4ECDC4";
+            playWinnerSound();
+            earnCoins(2, p2.score);
+        } else {
+            winnerText = "DRAW! 🤝";
+            winnerColor = "#FFD700";
+            earnCoins(1, p1.score);
+            earnCoins(2, p2.score);
+        }
+        
+        showWinner(winnerText, winnerColor);
+        winnerDeclared = true;
+        stopMusic();
+    }
+}
+
+function showWinner(text, color) {
+    winnerBanner.textContent = text;
+    winnerBanner.style.background = `linear-gradient(135deg, ${color}, ${color}dd)`;
+    winnerBanner.classList.remove("hidden");
+    setTimeout(() => winnerBanner.classList.add("hidden"), 3000);
+}
+
+function restart() {
+    const skin1 = getCurrentSkin(1);
+    const skin2 = getCurrentSkin(2);
+    
+    p1 = {
+        bird: { 
+            x: 80, 
+            y: H/2, 
+            width: 34, 
+            height: 34, 
+            vel: 0, 
+            rot: 0, 
+            wing: 0,
+            skinColor: skin1.color
+        },
+        score: 0,
+        over: false,
+        pipes: [],
+        particles: [],
+        popups: [],
+        pipeTimer: 0,
+        groundX: 0,
+        started: false,
+        canPlay: true
+    };
+    
+    p2 = {
+        bird: { 
+            x: 80, 
+            y: H/2, 
+            width: 34, 
+            height: 34, 
+            vel: 0, 
+            rot: 0, 
+            wing: 0,
+            skinColor: skin2.color
+        },
+        score: 0,
+        over: false,
+        pipes: [],
+        particles: [],
+        popups: [],
+        pipeTimer: 0,
+        groundX: 0,
+        started: false,
+        canPlay: true
+    };
+    
+    // Reset milestones
+    lastMilestoneP1 = 0;
+    lastMilestoneP2 = 0;
+    
+    p1ScoreEl.textContent = "0";
+    p2ScoreEl.textContent = "0";
+    paused = false;
+    winnerDeclared = false;
+    winnerBanner.classList.add("hidden");
+    
+    stopMusic();
+    
+    if (gameOverSound) {
+        gameOverSound.pause();
+        gameOverSound.currentTime = 0;
+    }
+    if (winnerSound) {
+        winnerSound.pause();
+        winnerSound.currentTime = 0;
+    }
+    if (yahooSound) {
+        yahooSound.pause();
+        yahooSound.currentTime = 0;
+    }
+    
+    updateBirdDisplay();
+}
+
+// =====================
+// Draw Player Game
+// =====================
+function drawGame(ctx, player, isPlayer1) {
+    drawSky(ctx);
+    drawClouds(ctx);
+    
+    if (!paused && !player.over && player.started) {
+        player.pipeTimer++;
+        const interval = getPipeInterval();
+        if (player.pipeTimer >= interval) {
+            createPipe(player);
+            player.pipeTimer = 0;
+        }
+    }
+    
+    if (!paused && !player.over && player.started) {
+        player.groundX -= getPipeSpeed();
+        if (player.groundX <= -48) player.groundX += 48;
+    }
+    
+    drawPipes(ctx, player.pipes);
+    drawGround(ctx, player.groundX);
+    drawBird(ctx, player.bird, isPlayer1);
+    
+    updateParticles(player.particles);
+    drawParticles(ctx, player.particles);
+    updatePopups(player.popups);
+    drawPopups(ctx, player.popups);
+    
+    if (player.over && !winnerDeclared) {
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#FFF";
+        ctx.font = "bold 28px Outfit, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", W/2, H/2 - 30);
+        ctx.fillStyle = "#FFD700";
+        ctx.font = "22px Outfit, sans-serif";
+        ctx.fillText("Score: " + player.score, W/2, H/2 + 20);
+    }
+    
+    if (!player.started && !player.over) {
+        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#FFF";
+        ctx.font = "bold 24px Outfit, sans-serif";
+        ctx.textAlign = "center";
+        if (isPlayer1) {
+            ctx.fillText("PRESS SPACE", W/2, H/2 - 20);
+            ctx.font = "16px Outfit, sans-serif";
+            ctx.fillStyle = "#aaa";
+            ctx.fillText("or click/tap", W/2, H/2 + 20);
+        } else {
+            ctx.fillText("PRESS ↑", W/2, H/2 - 20);
+            ctx.font = "16px Outfit, sans-serif";
+            ctx.fillStyle = "#aaa";
+            ctx.fillText("(UP ARROW)", W/2, H/2 + 10);
+            ctx.fillText("or click/tap", W/2, H/2 + 40);
+        }
+    }
+    
+    if (paused && (player.started || player.over)) {
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#FFD700";
+        ctx.font = "bold 32px Outfit, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("⏸ PAUSED", W/2, H/2);
+        ctx.fillStyle = "#FFF";
+        ctx.font = "14px Outfit, sans-serif";
+        ctx.fillText("Press P to resume", W/2, H/2 + 50);
+    }
+}
+
+// =====================
+// Event Listeners
+// =====================
+document.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+        e.preventDefault();
+        jump(p1, true);
+    } else if (e.code === "ArrowUp") {
+        e.preventDefault();
+        jump(p2, false);
+    } else if (e.code === "KeyP" || e.code === "Escape") {
+        e.preventDefault();
+        if ((p1.started || p2.started) && !winnerDeclared) {
+            paused = !paused;
+        }
+    } else if (e.code === "KeyR") {
+        e.preventDefault();
+        restart();
+    } else if (e.code === "KeyM") {
+        e.preventDefault();
+        muted = !muted;
+        muteBtn.textContent = muted ? "🔇" : "🔊";
+        if (muted) {
+            stopMusic();
+        } else if (!musicStarted) {
+            startMusic();
+        }
+    }
+});
+
+canvasP1.addEventListener("click", () => {
+    if (!musicStarted && !muted) startMusic();
+    jump(p1, true);
+});
+
+canvasP2.addEventListener("click", () => {
+    if (!musicStarted && !muted) startMusic();
+    jump(p2, false);
+});
+
+canvasP1.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    if (!musicStarted && !muted) startMusic();
+    jump(p1, true);
+}, { passive: false });
+
+canvasP2.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    if (!musicStarted && !muted) startMusic();
+    jump(p2, false);
+}, { passive: false });
+
+restartBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    restart();
+});
+
+if (menuBtn) {
+    menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        stopMusic();
+        if (gameOverSound) {
+            gameOverSound.pause();
+            gameOverSound.currentTime = 0;
+        }
+        if (winnerSound) {
+            winnerSound.pause();
+            winnerSound.currentTime = 0;
+        }
+        if (yahooSound) {
+            yahooSound.pause();
+            yahooSound.currentTime = 0;
+        }
+        
+        window.location.href = '../index.html';
+    });
+}
+
+muteBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    muted = !muted;
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    if (muted) {
+        stopMusic();
+    } else if (!musicStarted) {
+        startMusic();
+    }
+});
+
+// Auto-start music on any document click
+document.addEventListener("click", () => {
+    if (!musicStarted && !muted) {
+        startMusic();
+    }
+});
+
+document.addEventListener("keydown", () => {
+    if (!musicStarted && !muted) {
+        startMusic();
+    }
+});
+
+// =====================
+// Initialize
+// =====================
+loadGameData();
+loadMusicPreference();
+updateCoinsDisplay();
+updateBirdDisplay();
+
+// Start music if not muted
+if (!muted) {
+    setTimeout(() => {
+        startMusic();
+    }, 500);
+}
+
+// =====================
+// Game Loop
+// =====================
+function loop() {
+    frameCount++;
+    
+    updateClouds();
+    
+    updateBird(p1);
+    updateBird(p2);
+    updatePipes(p1);
+    updatePipes(p2);
+    
+    drawGame(ctxP1, p1, true);
+    drawGame(ctxP2, p2, false);
+    
+    requestAnimationFrame(loop);
+}
+
+loop();
+
+console.log("Multiplayer game loaded with Skin Shop, Music Player & Yahoo SFX!");
+console.log("Each player has their own coins!");
+console.log("YAHOO! SFX plays every 5 pipes!");
+console.log("Press SPACE or UP ARROW to start!");
+console.log("Click MUSIC button to change background music!");
+console.log("Earn coins by playing games!");
+</script>
+</body>
+</html>

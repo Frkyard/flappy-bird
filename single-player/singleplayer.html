@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird — Single Player</title>
+    <meta name="description" content="A beautifully crafted Flappy Bird game with stunning visuals, particle effects, and progressive difficulty.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="gameContainer">
+
+        <!-- Top HUD -->
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">SCORE</span>
+                <span class="hud-value" id="score">0</span>
+            </div>
+            <div class="hud-item hud-center">
+                <span class="hud-label">COMBO</span>
+                <span class="hud-value" id="combo">x0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">BEST</span>
+                <span class="hud-value" id="highScore">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">Level</span>
+                <span class="hud-value" id="level">1</span>
+            </div>
+        </div>
+
+        <!-- Canvas + Overlays Wrapper -->
+        <div id="canvasWrapper">
+            <canvas id="game" width="1000" height="600"></canvas>
+
+            <!-- Start Overlay -->
+            <div id="startOverlay">
+                <div class="overlay-content">
+                    <div class="bird-icon">🐦</div>
+                    <h1>FLAPPY BIRD</h1>
+                    <p class="subtitle">Premium Edition</p>
+                    <div class="start-instructions">
+                        <div class="key-hint">
+                            <span class="key">SPACE</span>
+                            <span>or</span>
+                            <span class="key">CLICK</span>
+                        </div>
+                        <p>to flap &amp; start</p>
+                    </div>
+                    <div class="controls-info">
+                        <span><span class="key key-small">P</span> Pause</span>
+                        <span><span class="key key-small">M</span> Mute</span>
+                    </div>
+                    <!-- Skin Selector -->
+<div id="skinSelector">
+
+    <h3>Select Bird Skin</h3>
+
+    <div class="skin-box">
+
+        <button id="skinPrev">◀</button>
+
+        <div class="skin-preview">
+            <div id="skinEmoji">🦅</div>
+            <div id="skinName">Eagle</div>
+        </div>
+
+        <button id="skinNext">▶</button>
+
+    </div>
+
+    <small>
+        Gunakan ◀ ▶ atau Arrow Left / Right
+    </small>
+
+</div>
+                </div>
+            </div>
+
+            <!-- Pause Overlay -->
+            <div id="pauseOverlay" class="hidden">
+                <div class="overlay-content">
+                    <h2>⏸️ PAUSED</h2>
+                    <p>Press <span class="key">P</span> or <span class="key">ESC</span> to resume</p>
+                </div>
+            </div>
+
+            <!-- Game Over Overlay -->
+            <div id="gameOver" class="hidden">
+                <div class="overlay-content game-over-content">
+                    <h2>GAME OVER</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Score</span>
+                            <span class="stat-value" id="finalScore">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Best</span>
+                            <span class="stat-value" id="finalBest">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Max Combo</span>
+                            <span class="stat-value" id="finalCombo">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Games</span>
+                            <span class="stat-value" id="totalGames">0</span>
+                        </div>
+                    </div>
+                    <div id="newBestBadge" class="hidden">🏆 NEW BEST!</div>
+                    <button id="restartBtn" onclick="restartGame()">
+                        <span>▶ PLAY AGAIN</span>
+                    </button>
+                    <button id="menuBtn" onclick="location.href='../index.html'">
+                        <span>🏠 MENU</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mute Button -->
+            <button id="muteBtn" title="Toggle Sound">🔊</button>
+        </div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="assets/audio/Bad Piggies Theme.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="gameOverMusic">
+        <source src="assets/audio/gameover.mp3" type="audio/mpeg">
+
+    <audio id="milestoneAudio" src="milestone.mp3" preload="auto"></audio>
+
+    <script src="singleplayergame.js"></script>
+</body>
+</html>
