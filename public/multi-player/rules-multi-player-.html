@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Multiplayer Rules — Flappy Bird Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 34px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00E5FF, #7C4DFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            margin-top: 25px;
+            font-size: 20px;
+            color: #00E5FF;
+        }
+
+        p, li {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.85);
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .mode-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .mode {
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            margin-top: 25px;
+            display: block;
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00E5FF, #7C4DFF);
+            color: white;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .winner {
+            color: #FFD700;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>FLAPPY BIRD MULTI PLAYER</h1>
+    <p style="text-align:center; opacity:0.7;">
+        Multiplayer Rules & Battle Guide
+    </p>
+
+    <h2>👥 Mode Multiplayer</h2>
+    <ul>
+        <li>2 pemain bermain secara bersamaan.</li>
+        <li>Setiap pemain memiliki burung dan skor masing-masing.</li>
+        <li>Pemain yang bertahan paling lama akan menjadi pemenang.</li>
+    </ul>
+
+    <h2>🎮 Kontrol</h2>
+    <div class="mode-box">
+        <div class="mode"><b>Player 1</b> → Tekan <b>W</b> untuk terbang</div>
+        <div class="mode"><b>Player 2</b> → Tekan <b>↑ (Arrow Up)</b> untuk terbang</div>
+    </div>
+
+    <h2>🏁 Aturan Permainan</h2>
+    <ul>
+        <li>Setiap pipa yang berhasil dilewati = +1 skor.</li>
+        <li>Jika salah satu pemain menabrak pipa atau tanah, pemain tersebut <b>gugur</b>.</li>
+        <li>Pemain yang masih hidup akan terus bermain sampai kalah atau mencapai skor tertinggi.</li>
+        <li>Jika kedua pemain kalah pada waktu yang hampir bersamaan, pemenang ditentukan dari <b>skor tertinggi</b>.</li>
+    </ul>
+
+    <h2>⚔️ Sistem Battle</h2>
+    <div class="mode-box">
+        <div class="mode">🟢 <b>Awal Game</b> → Kecepatan normal</div>
+        <div class="mode">🟡 <b>Skor 5+</b> → Pipa bergerak lebih cepat</div>
+        <div class="mode">🟠 <b>Skor 10+</b> → Jarak antar pipa lebih sempit</div>
+        <div class="mode">🔴 <b>Skor 15+</b> → Tantangan semakin sulit</div>
+        <div class="mode winner">⚡ <b>Skor 20+</b> → Mode Hardcore Multiplayer</div>
+    </div>
+
+    <h2>🏆 Kondisi Menang</h2>
+    <ul>
+        <li>Menjadi pemain terakhir yang masih hidup.</li>
+        <li>Atau memiliki skor tertinggi saat kedua pemain gugur.</li>
+    </ul>
+
+    <h2>💡 Tips Multiplayer</h2>
+    <ul>
+        <li>Jangan terlalu fokus pada lawan.</li>
+        <li>Jaga ritme lompatan tetap stabil.</li>
+        <li>Level tinggi membutuhkan kontrol yang lebih halus.</li>
+        <li>Tekanan dari lawan sering membuat pemain terburu-buru — tetap tenang.</li>
+    </ul>
+
+    <a class="btn" href="multiplayer.html">▶ Kembali ke Multiplayer</a>
+
+</div>
+
+</body>
+</html>

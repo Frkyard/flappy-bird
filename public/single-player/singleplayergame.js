@@ -27,6 +27,11 @@
     const bgMusic = document.getElementById("bgMusic");
     const gameOverMusic = document.getElementById("gameOverMusic");
     const milestoneAudio = document.getElementById("milestoneAudio");
+    const skinEmoji = document.getElementById("skinEmoji");
+    const skinNameEl = document.getElementById("skinName");
+    const medalDisplay = document.getElementById("medalDisplay");
+    const medalIcon = document.getElementById("medalIcon");
+    const medalText = document.getElementById("medalText");
 
     // =====================
     // GAME STATE
@@ -47,6 +52,66 @@
     let skyPhase = 0;
     let foods = [];
     let doubleScore = false;
+
+    // =====================
+    // BIRD SKIN SYSTEM
+    // =====================
+    const BIRD_SKINS = {
+        eagle: {
+            name: "Eagle", emoji: "🦅",
+            bodyInner: "#FFE082", bodyMid: "#FFB300", bodyOuter: "#E65100",
+            wing: "#6D4C41", head: "#FFCC80", beak: "#FF6F00", beakDark: "#E65100",
+            tail: "#5D4037", particle: "rgba(255,200,0,0.5)"
+        },
+        phoenix: {
+            name: "Phoenix", emoji: "🔥",
+            bodyInner: "#FFCDD2", bodyMid: "#EF5350", bodyOuter: "#B71C1C",
+            wing: "#D32F2F", head: "#FFAB91", beak: "#FF6E40", beakDark: "#DD2C00",
+            tail: "#BF360C", particle: "rgba(255,100,0,0.5)"
+        },
+        ice: {
+            name: "Ice Bird", emoji: "🧊",
+            bodyInner: "#E0F7FA", bodyMid: "#4DD0E1", bodyOuter: "#006064",
+            wing: "#0097A7", head: "#B2EBF2", beak: "#00BCD4", beakDark: "#00838F",
+            tail: "#00695C", particle: "rgba(0,229,255,0.5)"
+        },
+        parrot: {
+            name: "Parrot", emoji: "🦜",
+            bodyInner: "#C8E6C9", bodyMid: "#66BB6A", bodyOuter: "#1B5E20",
+            wing: "#43A047", head: "#A5D6A7", beak: "#FFC107", beakDark: "#FF8F00",
+            tail: "#2E7D32", particle: "rgba(100,255,100,0.5)"
+        },
+        shadow: {
+            name: "Shadow Raven", emoji: "🌑",
+            bodyInner: "#CE93D8", bodyMid: "#7B1FA2", bodyOuter: "#311B92",
+            wing: "#4A148C", head: "#E1BEE7", beak: "#EA80FC", beakDark: "#AA00FF",
+            tail: "#1A237E", particle: "rgba(200,100,255,0.5)"
+        }
+    };
+
+    const skinKeys = Object.keys(BIRD_SKINS);
+    let currentSkinIndex = Math.max(0, skinKeys.indexOf(localStorage.getItem("flappySkin") || "eagle"));
+    let currentSkin = BIRD_SKINS[skinKeys[currentSkinIndex]];
+
+    function updateSkinUI() {
+        if (skinEmoji) skinEmoji.textContent = currentSkin.emoji;
+        if (skinNameEl) skinNameEl.textContent = currentSkin.name;
+    }
+    updateSkinUI();
+
+    function nextSkin() {
+        currentSkinIndex = (currentSkinIndex + 1) % skinKeys.length;
+        currentSkin = BIRD_SKINS[skinKeys[currentSkinIndex]];
+        localStorage.setItem("flappySkin", skinKeys[currentSkinIndex]);
+        updateSkinUI();
+    }
+
+    function prevSkin() {
+        currentSkinIndex = (currentSkinIndex - 1 + skinKeys.length) % skinKeys.length;
+        currentSkin = BIRD_SKINS[skinKeys[currentSkinIndex]];
+        localStorage.setItem("flappySkin", skinKeys[currentSkinIndex]);
+        updateSkinUI();
+    }
 
     highScoreText.textContent = highScore;
 
@@ -70,35 +135,161 @@
     let level = 1;
 
     const levelSettings = {
-        1: { gravity: 0.14, jump: -4.0 },
-        2: { gravity: 0.16, jump: -4.5 },
-        3: { gravity: 0.18, jump: -5.0 },
-        4: { gravity: 0.20, jump: -5.5 },
-        5: { gravity: 0.22, jump: -6.0 }
+    1: {
+        gravity: 0.14,
+        jump: -4.0,
+        pipeSpeed: 1.8,
+        gap: 180,
+        interval: 160
+    },
+
+    2: {
+        gravity: 0.16,
+        jump: -4.5,
+        pipeSpeed: 2.3,
+        gap: 170,
+        interval: 150
+    },
+
+    3: {
+        gravity: 0.18,
+        jump: -5.0,
+        pipeSpeed: 2.8,
+        gap: 160,
+        interval: 140
+    },
+
+    4: {
+        gravity: 0.20,
+        jump: -5.5,
+        pipeSpeed: 3.3,
+        gap: 145,
+        interval: 130
+    },
+
+    5: {
+        gravity: 0.22,
+        jump: -6.0,
+        pipeSpeed: 4.0,
+        gap: 130,
+        interval: 120
+    }
+};
+
+    // =====================
+    // LEVEL THEMES
+    // =====================
+    const LEVEL_THEMES = {
+        1: { skyTop: [135, 206, 235], skyBot: [176, 224, 230], mountBase: [100, 160, 120], mountFar: [120, 180, 140] },
+        2: { skyTop: [255, 150, 60],  skyBot: [180, 80, 140],  mountBase: [140, 90, 60],   mountFar: [160, 110, 80] },
+        3: { skyTop: [15, 20, 60],    skyBot: [30, 35, 80],    mountBase: [30, 40, 70],    mountFar: [50, 60, 90] },
+        4: { skyTop: [10, 80, 90],    skyBot: [20, 130, 110],  mountBase: [20, 80, 70],    mountFar: [40, 110, 95] },
+        5: { skyTop: [80, 10, 10],    skyBot: [40, 5, 5],      mountBase: [80, 20, 20],    mountFar: [100, 40, 30] }
     };
+
+    let prevTheme = LEVEL_THEMES[1];
+    let currTheme = LEVEL_THEMES[1];
+    let themeT = 1.0;
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function lerpColor(c1, c2, t) {
+        return [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+    }
 
     // gravity & jumpForce are mutable, driven by current level
     let gravity = levelSettings[level].gravity;
     let jumpForce = levelSettings[level].jump;
+    let pipeSpeed = levelSettings[level].pipeSpeed;
+    let pipeGap = levelSettings[level].gap;
+    let pipeInterval = levelSettings[level].interval;
 
-    function setLevel(newLevel) {
-        if (newLevel === level) return;
+    // =====================
+    // LEVEL UP ANIMATION
+    // =====================
+    let levelUpTimer = 0;
+    let levelUpText = "";
+    let levelUpFlash = 0;
 
-        level = newLevel;
-        gravity = levelSettings[level].gravity;
-        jumpForce = levelSettings[level].jump;
+    function triggerLevelUp(lvl) {
+        const names = { 1: "LEVEL 1", 2: "LEVEL 2", 3: "LEVEL 3", 4: "LEVEL 4", 5: "⚡ HARDCORE ⚡" };
+        levelUpText = names[lvl] || "LEVEL UP";
+        levelUpTimer = 90;
+        levelUpFlash = 1.0;
 
-        if (levelText) levelText.textContent = level;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        spawnParticles(cx, cy, 20, "#FFD700", 5, 40);
+        spawnParticles(cx, cy, 15, "#00E5FF", 4, 35);
+
+        shakeTimer = 8;
+        shakeIntensity = 4;
+
+        playSound("milestone");
     }
 
-    const basePipeSpeed = 1.8;
-    const basePipeInterval = 160;
-    const baseGap = 180;
+    function setLevel(newLevel) {
+    if (newLevel === level) return;
+
+    level = newLevel;
+
+    gravity = levelSettings[level].gravity;
+    jumpForce = levelSettings[level].jump;
+
+    pipeSpeed = levelSettings[level].pipeSpeed;
+    pipeGap = levelSettings[level].gap;
+    pipeInterval = levelSettings[level].interval;
+
+    if (level === 5) {
+    shakeIntensity = 2;
+}
+
+    const levelNames = {
+        1: " 1",
+        2: " 2",
+        3: " 3",
+        4: " 4",
+        5: "HARDCORE"
+    };
+
+    if (levelText) {
+        levelText.textContent = levelNames[level];
+}
+
+    // Theme transition — snapshot current visual state, then lerp to new theme
+    const snapTop = lerpColor(prevTheme.skyTop, currTheme.skyTop, themeT);
+    const snapBot = lerpColor(prevTheme.skyBot, currTheme.skyBot, themeT);
+    const snapMB = lerpColor(prevTheme.mountBase, currTheme.mountBase, themeT);
+    const snapMF = lerpColor(prevTheme.mountFar, currTheme.mountFar, themeT);
+    prevTheme = { skyTop: snapTop, skyBot: snapBot, mountBase: snapMB, mountFar: snapMF };
+    currTheme = LEVEL_THEMES[level];
+    themeT = 0;
+
+    // Level up animation
+    triggerLevelUp(level);
+}
+
+    function getPipeSpeed() {
+        return pipeSpeed;
+    }
+
+    function getPipeGap() {
+        return pipeGap;
+    }
+
+    function getPipeInterval() {
+        return pipeInterval;
+    }
 
     // =====================
     // BIRD
     // =====================
     let bird = { x: 80, y: 280, width: 34, height: 34, velocity: 0, rotation: 0, flapFrame: 0 };
+
+    // =====================
+    // TRAIL SYSTEM
+    // =====================
+    let birdTrail = [];
+    const TRAIL_LENGTH = 6;
 
     // =====================
     // WORLD
@@ -196,13 +387,6 @@
 }
 
     // =====================
-    // DIFFICULTY
-    // =====================
-    function getPipeSpeed() { return basePipeSpeed + score * 0.02; }
-    function getPipeGap() { return Math.max(180, baseGap - score * 1.5); }
-    function getPipeInterval() { return Math.max(110, basePipeInterval - score * 0.6); }
-
-    // =====================
     // PARTICLE SYSTEM
     // =====================
     function spawnParticles(x, y, count, color, speed, life) {
@@ -268,32 +452,29 @@
     }
 
     // =====================
-    // SKY & BACKGROUND
+    // SKY & BACKGROUND (Theme-aware)
     // =====================
     function drawSky() {
-        skyPhase += 0.0003;
-        const cycle = (Math.sin(skyPhase) + 1) / 2;
+        // Advance theme transition
+        if (themeT < 1.0) themeT = Math.min(1.0, themeT + 0.015);
 
-        const dayTop = [135, 206, 235];
-        const dayBot = [176, 224, 230];
-        const nightTop = [15, 12, 41];
-        const nightBot = [44, 42, 87];
+        const top = lerpColor(prevTheme.skyTop, currTheme.skyTop, themeT);
+        const bot = lerpColor(prevTheme.skyBot, currTheme.skyBot, themeT);
 
-        const topR = nightTop[0] + (dayTop[0] - nightTop[0]) * cycle;
-        const topG = nightTop[1] + (dayTop[1] - nightTop[1]) * cycle;
-        const topB = nightTop[2] + (dayTop[2] - nightTop[2]) * cycle;
-        const botR = nightBot[0] + (dayBot[0] - nightBot[0]) * cycle;
-        const botG = nightBot[1] + (dayBot[1] - nightBot[1]) * cycle;
-        const botB = nightBot[2] + (dayBot[2] - nightBot[2]) * cycle;
+        // Subtle pulse variation
+        skyPhase += 0.002;
+        const pulse = Math.sin(skyPhase) * 6;
 
         const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        grad.addColorStop(0, `rgb(${topR},${topG},${topB})`);
-        grad.addColorStop(1, `rgb(${botR},${botG},${botB})`);
+        grad.addColorStop(0, `rgb(${Math.round(Math.max(0, top[0] + pulse))},${Math.round(Math.max(0, top[1] + pulse))},${Math.round(Math.max(0, top[2] + pulse))})`);
+        grad.addColorStop(1, `rgb(${Math.round(Math.max(0, bot[0]))},${Math.round(Math.max(0, bot[1]))},${Math.round(Math.max(0, bot[2]))})`);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (cycle < 0.6) {
-            const starAlpha = Math.max(0, (0.6 - cycle) / 0.6);
+        // Stars visible when sky is dark
+        const brightness = (top[0] + top[1] + top[2]) / 3;
+        if (brightness < 130) {
+            const starAlpha = Math.max(0, (130 - brightness) / 130);
             stars.forEach(s => {
                 const twinkle = (Math.sin(frameCount * 0.03 + s.twinkle) + 1) / 2;
                 ctx.globalAlpha = starAlpha * twinkle * 0.8;
@@ -307,13 +488,13 @@
     }
 
     // =====================
-    // MOUNTAINS (parallax)
+    // MOUNTAINS (Theme-aware parallax)
     // =====================
     function drawMountains() {
-        const cycle = (Math.sin(skyPhase) + 1) / 2;
-        const r = 60 + cycle * 60, g = 60 + cycle * 80, b = 80 + cycle * 60;
+        const mb = lerpColor(prevTheme.mountBase, currTheme.mountBase, themeT);
+        const mf = lerpColor(prevTheme.mountFar, currTheme.mountFar, themeT);
 
-        ctx.fillStyle = `rgba(${r},${g},${b},0.5)`;
+        ctx.fillStyle = `rgba(${Math.round(mb[0])},${Math.round(mb[1])},${Math.round(mb[2])},0.5)`;
         ctx.beginPath();
         ctx.moveTo(0, canvas.height - 50);
         for (let x = 0; x <= canvas.width; x += 60) {
@@ -323,7 +504,7 @@
         ctx.lineTo(canvas.width, canvas.height - 50);
         ctx.fill();
 
-        ctx.fillStyle = `rgba(${r + 20},${g + 20},${b + 10},0.35)`;
+        ctx.fillStyle = `rgba(${Math.round(mf[0])},${Math.round(mf[1])},${Math.round(mf[2])},0.35)`;
         ctx.beginPath();
         ctx.moveTo(0, canvas.height - 50);
         for (let x = 0; x <= canvas.width; x += 40) {
@@ -511,7 +692,43 @@
     }
 
     // =====================
-    // BIRD (animated)
+    // TRAIL EFFECT
+    // =====================
+    function updateTrail() {
+        if (!gameStart || gameOver) return;
+        birdTrail.push({ x: bird.x, y: bird.y, rotation: bird.rotation, flapFrame: bird.flapFrame });
+        if (birdTrail.length > TRAIL_LENGTH) birdTrail.shift();
+    }
+
+    function drawTrail() {
+        if (birdTrail.length < 2) return;
+
+        birdTrail.forEach((t, i) => {
+            const alpha = (i / birdTrail.length) * 0.2;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            const cx = t.x + bird.width / 2;
+            const cy = t.y + bird.height / 2;
+            ctx.translate(cx, cy);
+            ctx.rotate(t.rotation * Math.PI / 180);
+
+            // Simplified silhouette for trail
+            const bodyGrad = ctx.createRadialGradient(-6, -6, 2, 0, 0, 18);
+            bodyGrad.addColorStop(0, currentSkin.bodyInner);
+            bodyGrad.addColorStop(1, currentSkin.bodyOuter);
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 18, 13, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        });
+        ctx.globalAlpha = 1;
+    }
+
+    // =====================
+    // BIRD (Skin-aware)
     // =====================
     function drawBird() {
         ctx.save();
@@ -526,7 +743,7 @@
         ctx.rotate(bird.rotation * Math.PI / 180);
 
         if (gameStart && !gameOver && frameCount % 3 === 0) {
-            spawnParticles(cx - 10, cy, 1, "rgba(255,200,0,0.5)", 1, 18);
+            spawnParticles(cx - 10, cy, 1, currentSkin.particle, 1, 18);
         }
 
         bird.flapFrame += 0.25;
@@ -541,12 +758,12 @@
         ctx.fill();
 
         /* =========================
-        BODY (elang)
+        BODY
         ========================= */
         const bodyGrad = ctx.createRadialGradient(-6, -6, 2, 0, 0, 18);
-        bodyGrad.addColorStop(0, "#FFE082");
-        bodyGrad.addColorStop(0.5, "#FFB300");
-        bodyGrad.addColorStop(1, "#E65100");
+        bodyGrad.addColorStop(0, currentSkin.bodyInner);
+        bodyGrad.addColorStop(0.5, currentSkin.bodyMid);
+        bodyGrad.addColorStop(1, currentSkin.bodyOuter);
 
         ctx.fillStyle = bodyGrad;
         ctx.beginPath();
@@ -554,9 +771,9 @@
         ctx.fill();
 
         /* =========================
-        WINGS (tajam kayak elang)
+        WINGS
         ========================= */
-        ctx.fillStyle = "#6D4C41";
+        ctx.fillStyle = currentSkin.wing;
 
         ctx.beginPath();
         ctx.moveTo(-2, 0);
@@ -567,17 +784,17 @@
         ctx.fill();
 
         /* =========================
-        HEAD (lebih agresif)
+        HEAD
         ========================= */
-        ctx.fillStyle = "#FFCC80";
+        ctx.fillStyle = currentSkin.head;
         ctx.beginPath();
         ctx.arc(9, -3, 7, 0, Math.PI * 2);
         ctx.fill();
 
         /* =========================
-        BEAK (elang banget 🔥)
+        BEAK
         ========================= */
-        ctx.fillStyle = "#FF6F00";
+        ctx.fillStyle = currentSkin.beak;
         ctx.beginPath();
         ctx.moveTo(14, -2);
         ctx.lineTo(24, 0);
@@ -586,7 +803,7 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = "#E65100";
+        ctx.fillStyle = currentSkin.beakDark;
         ctx.beginPath();
         ctx.moveTo(14, 0);
         ctx.lineTo(20, 1);
@@ -605,16 +822,16 @@
         ctx.arc(11, -4, 2.2, 0, Math.PI * 2);
         ctx.fill();
 
-        /* highlight mata biar “killer look” */
+        /* highlight mata biar "killer look" */
         ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.beginPath();
         ctx.arc(12, -6, 0.8, 0, Math.PI * 2);
         ctx.fill();
 
         /* =========================
-        TAIL (elang kipas)
+        TAIL
         ========================= */
-        ctx.fillStyle = "#5D4037";
+        ctx.fillStyle = currentSkin.tail;
         ctx.beginPath();
         ctx.moveTo(-16, 0);
         ctx.lineTo(-28, -6);
@@ -672,10 +889,10 @@
 
                 // Level progression based on score
                 let newLevel = 1;
-                if (score >= 20) newLevel = 5;
-                else if (score >= 15) newLevel = 4;
-                else if (score >= 10) newLevel = 3;
-                else if (score >= 5) newLevel = 2;
+                if (score >= 60) newLevel = 5;
+                else if (score >= 45) newLevel = 4;
+                else if (score >= 30) newLevel = 3;
+                else if (score >= 15) newLevel = 2;
 
                 setLevel(newLevel);
 
@@ -699,6 +916,122 @@
         });
 
         pipes = pipes.filter(p => p.x + p.width > -20);
+    }
+
+    // =====================
+    // LEVEL UP EFFECT (Canvas)
+    // =====================
+    function drawLevelUpEffect() {
+        if (levelUpTimer <= 0) return;
+        levelUpTimer--;
+
+        // Flash overlay
+        if (levelUpFlash > 0) {
+            ctx.globalAlpha = levelUpFlash * 0.3;
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            levelUpFlash -= 0.04;
+            ctx.globalAlpha = 1;
+        }
+
+        // Text animation
+        const totalFrames = 90;
+        const progress = 1 - (levelUpTimer / totalFrames);
+        const scale = progress < 0.15 ? (progress / 0.15) : 1;
+        const alpha = levelUpTimer / totalFrames;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(canvas.width / 2, canvas.height / 2 - 40);
+        ctx.scale(scale, scale);
+
+        // Glow
+        ctx.shadowColor = "#FFD700";
+        ctx.shadowBlur = 30;
+        ctx.fillStyle = "#FFD700";
+        ctx.font = "bold 52px Outfit, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(levelUpText, 0, 0);
+
+        // Outline
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.lineWidth = 2;
+        ctx.strokeText(levelUpText, 0, 0);
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+    }
+
+    // =====================
+    // PROGRESS BAR (Canvas)
+    // =====================
+    function drawProgressBar() {
+        if (!gameStart || gameOver) return;
+
+        const levelThresholds = [0, 15, 30, 45, 60];
+        const currentThreshold = levelThresholds[level - 1] || 0;
+        const nextThreshold = levelThresholds[level] || (currentThreshold + 15);
+
+        let progress;
+        if (level >= 5) {
+            progress = 1.0;
+        } else {
+            progress = Math.min(1, (score - currentThreshold) / (nextThreshold - currentThreshold));
+        }
+
+        const barWidth = 200;
+        const barHeight = 6;
+        const barX = canvas.width / 2 - barWidth / 2;
+        const barY = 10;
+
+        // Background
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barWidth, barHeight, 3);
+        ctx.fill();
+
+        // Fill
+        if (barWidth * progress > 0) {
+            const fillGrad = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
+            fillGrad.addColorStop(0, "#FFD700");
+            fillGrad.addColorStop(1, "#FF6B35");
+            ctx.fillStyle = fillGrad;
+            ctx.beginPath();
+            ctx.roundRect(barX, barY, Math.max(barWidth * progress, 6), barHeight, 3);
+            ctx.fill();
+        }
+
+        // Glow on fill end
+        if (progress > 0 && progress < 1) {
+            const glowX = barX + barWidth * progress;
+            ctx.fillStyle = "rgba(255, 215, 0, 0.4)";
+            ctx.beginPath();
+            ctx.arc(glowX, barY + barHeight / 2, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Label
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "10px Outfit, sans-serif";
+        ctx.textAlign = "center";
+        if (level >= 5) {
+            ctx.fillText("MAX LEVEL", canvas.width / 2, barY + barHeight + 13);
+        } else {
+            ctx.fillText(`Next: Level ${level + 1}`, canvas.width / 2, barY + barHeight + 13);
+        }
+    }
+
+    // =====================
+    // MEDAL SYSTEM
+    // =====================
+    function getMedal(s) {
+        if (s >= 60) return { icon: "💎", text: "PLATINUM", color: "#E0F7FA" };
+        if (s >= 45) return { icon: "🥇", text: "GOLD", color: "#FFD700" };
+        if (s >= 25) return { icon: "🥈", text: "SILVER", color: "#C0C0C0" };
+        if (s >= 10) return { icon: "🥉", text: "BRONZE", color: "#CD7F32" };
+        return null;
     }
 
     // =====================
@@ -756,9 +1089,23 @@
                 newBestBadge.classList.add("hidden");
             }
 
+            // Medal display
+            const medal = getMedal(finalScore);
+            if (medal && medalDisplay) {
+                medalIcon.textContent = medal.icon;
+                medalText.textContent = medal.text;
+                medalText.style.color = medal.color;
+                medalDisplay.classList.remove("hidden");
+            } else if (medalDisplay) {
+                medalDisplay.classList.add("hidden");
+            }
+
             gameOverPanel.classList.remove("hidden");
         }, 600);
     }
+
+    let fps = 0;
+let lastFpsTime = 0;
 
     // =====================
     // RESTART
@@ -777,6 +1124,8 @@
         pipes = [];
         particles = [];
         scorePopups = [];
+        foods = [];
+        birdTrail = [];
         score = 0;
         combo = 0;
         maxCombo = 0;
@@ -785,8 +1134,17 @@
         gameOver = false;
         paused = false;
         shakeTimer = 0;
+        levelUpTimer = 0;
+        doubleScore = false;
+
+        // Reset theme
+        prevTheme = LEVEL_THEMES[1];
+        currTheme = LEVEL_THEMES[1];
+        themeT = 1.0;
 
         setLevel(1);
+        level = 1;
+levelText.textContent = " 1";
 
         scoreText.textContent = 0;
         comboText.textContent = "x0";
@@ -818,6 +1176,12 @@
     document.addEventListener("keydown", e => {
         if (e.code === "Space") { e.preventDefault(); doJump(); }
         if (e.code === "ArrowUp") { e.preventDefault(); doJump(); }
+
+        // Skin navigation on start screen
+        if (!gameStart && !gameOver) {
+            if (e.code === "ArrowLeft") { prevSkin(); }
+            if (e.code === "ArrowRight") { nextSkin(); }
+        }
 
         if (e.code === "KeyP" || e.code === "Escape") {
             if (!gameStart || gameOver) return;
@@ -864,6 +1228,24 @@
         muted = !muted;
         muteBtn.textContent = muted ? "🔇" : "🔊";
     });
+
+    // Skin selector button handlers
+    const skinPrevBtn = document.getElementById("skinPrev");
+    const skinNextBtn = document.getElementById("skinNext");
+
+    if (skinPrevBtn) {
+        skinPrevBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            prevSkin();
+        });
+    }
+
+    if (skinNextBtn) {
+        skinNextBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            nextSkin();
+        });
+    }
 
     // =====================
     // SCREEN SHAKE
@@ -923,10 +1305,12 @@
         }
 
         updateBird();
+        updateTrail();
         updatePipes();
 
         drawPipes();
         drawGround();
+        drawTrail();
         drawBird();
 
         updateParticles();
@@ -936,6 +1320,8 @@
         updateFoods();
         drawFoods();
 
+        drawProgressBar();
+        drawLevelUpEffect();
         drawStartHint();
 
         ctx.restore();
