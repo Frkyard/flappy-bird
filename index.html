@@ -49,12 +49,30 @@
     </div>
   </div>
 
+  <audio id="bgMusic" loop>
+    <source src="multi-player/music/party.mp3" type="audio/mpeg">
+    Browser anda tidak mendukung audio
+  </audio>
+
   <script>
     document.getElementById("bestScore").textContent =
       localStorage.getItem("flappyHighScore") || 0;
 
     document.getElementById("gamesPlayed").textContent =
       localStorage.getItem("flappyTotalGames") || 0;
+
+      // Background Music 
+      const bgMusic = document.getElementById("bgMusic");
+
+      bgMusic.volume = 0.4; // Volume 40%
+
+      function startMusic() { bgMusic.play().catch((err) => { console.log("Autoplay diblokir:", err); });
+
+      // Hanya dijalankan sekali 
+      document.removeEventListener("click", startMusic); document.removeEventListener("keydown", startMusic); document.removeEventListener("touchstart", startMusic); }
+
+      // Musik dimulai setelah interaksi pertama 
+      document.addEventListener("click", startMusic); document.addEventListener("keydown", startMusic); document.addEventListener("touchstart", startMusic);
   </script>
 </body>
 </html>
